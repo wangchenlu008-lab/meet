@@ -1,0 +1,16 @@
+{
+  "id": "chill-meet-enhanced",
+  "name": "遇见 (Chill Meet Roche联通版)",
+  "version": "1.0.0",
+  "description": "基于原版遇见深度改造，直接接入 Roche 宿主模型、人设和世界书，实现纯净的原生卡片社交与跨应用联通。",
+  "author": "Roche Plugin Assistant",
+  "entry": "https://raw.githubusercontent.com/wangchenlu008-lab/meet/main/plugin.js",
+  "hash": "",
+  "permissions": [
+    "persona:read",
+    "worldbook:read",
+    "ai:chat",
+    "storage",
+    "ui"
+  ]
+}
