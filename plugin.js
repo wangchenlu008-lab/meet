@@ -1,7 +1,7 @@
 window.RochePlugin.register({
   id: "soul-meet-app",
   name: "Soul遇见",
-  version: "1.0.0",
+  version: "1.2.0",
   apps: [
     {
       id: "soul-meet-main",
