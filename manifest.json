@@ -4,7 +4,7 @@
   "version": "1.2.0",
   "description": "沉浸式AI交友应用。支持匹配主应用角色与随机生成的陌生人，提供丰富人设复制与记忆写回功能。",
   "author": "Roche Assistant",
-  "entry": "https://raw.githubusercontent.com/用户名/仓库名/main/plugin.js",
+  "entry": "https://raw.githubusercontent.com/wangchenlu008-lab/meet/main/plugin.js",
   "hash": "",
   "permissions": [
     "persona:read",
