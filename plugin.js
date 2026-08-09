@@ -1,7 +1,7 @@
 window.RochePlugin.register({
   id: "soul-meet-app",
   name: "Soul遇见",
-  version: "2.6.0",
+  version: "2.7.0",
   apps: [
     {
       id: "soul-meet-main",
@@ -70,6 +70,28 @@ window.RochePlugin.register({
           .sm-custom-input { flex: 1; padding: 10px 12px; border-radius: 14px; border: 1px solid #ddd; font-size: 14px; outline: none; background: #fafafa; transition: 0.2s; }
           .sm-custom-input:focus { border-color: #ff9a9e; background: #fff; }
           
+          /* 广场动态样式 */
+          .sm-square-feed { flex:1; overflow-y:auto; padding:0; display:flex; flex-direction:column; background:#f4f5f7; }
+          .sm-post { background:#fff; margin-bottom:10px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+          .sm-post-header { display:flex; align-items:center; gap:12px; }
+          .sm-post-av { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #a18cd1, #fbc2eb); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:18px; cursor:pointer; }
+          .sm-post-info { flex:1; }
+          .sm-post-name { font-weight:700; font-size:15px; color:#222; }
+          .sm-post-time { font-size:11px; color:#999; margin-top:2px; }
+          .sm-post-text { font-size:14.5px; color:#333; line-height:1.6; word-wrap:break-word; }
+          .sm-post-img-wrap { width:100%; max-height:220px; overflow:hidden; border-radius:12px; margin-top:6px; display:flex; align-items:center; justify-content:center; background:#eee; position:relative; }
+          .sm-post-img-text { position:absolute; font-size:13px; color:#555; background:rgba(255,255,255,0.8); padding:6px 12px; border-radius:12px; backdrop-filter:blur(4px); }
+          .sm-post-actions { display:flex; gap:20px; border-top:1px solid #f0f0f0; padding-top:12px; margin-top:4px; }
+          .sm-post-act-btn { display:flex; align-items:center; gap:6px; color:#777; font-size:13px; cursor:pointer; background:none; border:none; padding:0; }
+          .sm-post-act-btn.liked { color:#ff6b81; font-weight:bold; }
+          .sm-comments { background:#f9f9f9; border-radius:12px; padding:10px; margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+          .sm-comment-item { font-size:13px; line-height:1.5; color:#444; position:relative; }
+          .sm-comment-name { font-weight:700; color:#555; margin-right:4px; cursor:pointer; }
+          .sm-comment-del { color:#ff9a9e; font-size:11px; margin-left:8px; cursor:pointer; display:none; }
+          .sm-comment-item:hover .sm-comment-del { display:inline; }
+          .sm-refresh-square { background:linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color:#fff; border:none; padding:12px; margin:16px; border-radius:20px; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(255,154,158,0.3); transition:0.2s; text-align:center;}
+          .sm-refresh-square:active { transform:scale(0.95); }
+
           /* 消息列表 */
           .sm-list-item { display: flex; padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.03); align-items: center; gap: 14px; cursor: pointer; transition: background 0.2s; margin: 0 8px; border-radius: 16px; user-select: none; -webkit-user-select: none;}
           .sm-list-item:hover { background: rgba(255,255,255,0.8); }
@@ -273,12 +295,40 @@ window.RochePlugin.register({
             <div id="sm-inbox-list" style="flex:1; overflow-y:auto; padding-top: 8px;"></div>
           </div>
 
-          <!-- 运势页 -->
-          <div class="sm-view" id="view-daily">
-            <div class="sm-panel" style="background: linear-gradient(135deg, #fff 0%, #fff0f3 100%);">
-              <h3>✨ 今日运势</h3>
-              <p id="sm-daily-text" style="color:#444; font-size:14.5px;">正在感应星象...</p>
-              <button class="sm-btn-primary" id="btn-refresh-daily" style="width:100%; margin-top:10px;">重新感应</button>
+          <!-- 广场页 -->
+          <div class="sm-view" id="view-square" style="background:#f4f5f7;">
+            <div class="sm-header" style="background:#fff; border-bottom:none;">🌍 匿名广场</div>
+            <div id="sm-square-feed" class="sm-square-feed">
+               <!-- 动态列表注入在这里 -->
+            </div>
+          </div>
+
+          <!-- 我的页 -->
+          <div class="sm-view" id="view-me">
+            <div class="sm-panel">
+              <h3>👤 灵魂底色</h3>
+              <p>你在 Roche 当前活跃的人设，是跨维度匹配的坐标锚点：</p>
+              <p style="background:#f8f9fa; padding:14px; border-radius:16px; font-size:13.5px; color:#555; border: 1px solid #eee;" id="sm-my-persona">加载中...</p>
+            </div>
+            
+            <div class="sm-panel">
+              <h3>❤️ 交友偏好 (多选)</h3>
+              <p>勾选你更希望遇到哪种特质的人：</p>
+              <div id="sm-pref-list" class="sm-chip-container"></div>
+              <div class="sm-custom-input-wrap">
+                <input type="text" id="sm-custom-pref-input" class="sm-custom-input" placeholder="输入自定义偏好标签...">
+                <button class="sm-btn-outline" id="btn-add-pref" style="padding: 8px 16px;">添加</button>
+              </div>
+            </div>
+
+            <div class="sm-panel">
+              <h3>🌍 宇宙设定 (多选)</h3>
+              <p>挂载世界书，你可能会遇到该世界观下的各种人：</p>
+              <div id="sm-wb-list" class="sm-chip-container"><div style="font-size:13px; color:#aaa;">检索世界线...</div></div>
+            </div>
+
+            <div class="sm-panel" style="box-shadow:none; background:transparent; border:none; padding-top:0;">
+              <button class="sm-btn-outline" id="btn-clear-data" style="width:100%; color:#d63031; border-color:#fab1a0; background:#fff;">清空交友记忆</button>
             </div>
           </div>
 
@@ -315,7 +365,7 @@ window.RochePlugin.register({
           <div class="sm-nav">
             <button class="sm-nav-btn active" data-target="view-discover"><i>🌍</i>发现</button>
             <button class="sm-nav-btn" data-target="view-inbox"><i>💌</i>消息</button>
-            <button class="sm-nav-btn" data-target="view-daily"><i>✨</i>运势</button>
+            <button class="sm-nav-btn" data-target="view-daily"><i>🌍</i>广场</button>
             <button class="sm-nav-btn" data-target="view-me"><i>⚙️</i>我的</button>
           </div>
 
@@ -502,6 +552,7 @@ window.RochePlugin.register({
           worldbooks: [],
           selectedWbIds: [], 
           selectedPrefs: [], 
+          squarePosts: [],  // 新增这一行：用于存储广场动态
           chatQuoteData: null,
           isAiTyping: false
         };
@@ -517,7 +568,8 @@ window.RochePlugin.register({
           if (chatSets) state.chatSettings = chatSets;
           const rps = await roche.storage.get("soul_meet_rp_histories");
           if (rps) state.rpHistories = rps;
-          
+          const posts = await roche.storage.get("soul_meet_square");
+          if (posts) state.squarePosts = posts;
           const settings = await roche.storage.get("soul_meet_settings");
           if (settings) {
             if (Array.isArray(settings.selectedWbIds)) state.selectedWbIds = settings.selectedWbIds;
@@ -532,6 +584,7 @@ window.RochePlugin.register({
           await roche.storage.set("soul_meet_chats", state.chatHistories);
           await roche.storage.set("soul_meet_chat_settings", state.chatSettings);
           await roche.storage.set("soul_meet_rp_histories", state.rpHistories);
+          await roche.storage.set("soul_meet_square", state.squarePosts);
           await roche.storage.set("soul_meet_settings", { 
             selectedWbIds: state.selectedWbIds,
             selectedPrefs: state.selectedPrefs
@@ -1229,7 +1282,173 @@ window.RochePlugin.register({
             document.getElementById('sm-rp-room').dataset.theme = th;
             document.getElementById('modal-rp-settings').classList.remove('open');
         };
+// ==========================================
+        // 8.5 匿名广场核心引擎 (生成、点赞、评论、私聊)
+        // ==========================================
+        
+        async function generateSquarePosts() {
+            const feedEl = document.getElementById('sm-square-feed');
+            feedEl.innerHTML = `<div class="sm-empty-state" style="margin-top:50px;"><div style="font-size:32px; margin-bottom:12px;">🛸</div><div style="color:#888; font-size:14px;">正在搜寻附近的多维动态...</div></div>`;
+            
+            try {
+                const modeInstruction = state.discoverMode === 'r18' 
+                    ? `由于处于午夜狂野模式，请生成充满暗示、钓鱼、擦边或极具诱惑力的动态。`
+                    : `生成风格各异的日常分享：可以是深夜网抑云、搞笑吐槽、发美照帅照钓鱼、或者是奇怪的求助。`;
 
+                const sysPrompt = `你是一个交友软件的广场动态生成器。请生成 4 到 5 条"活人"发的广场动态。
+要求：
+1. ${modeInstruction}
+2. 发帖人的身份可以是学生、霸总、魔法师等，要像真人在发朋友圈。
+3. "imageDesc" 字段如果有配图则写详细的文字描述(如"一张腹肌照")，没有则留空字符串。
+4. 严格输出JSON格式：
+{"posts": [{"id":"post_短id", "author": {"id":"stranger_id", "name":"网名", "persona":"该用户的隐藏真实性格和身份设定", "avatar":""}, "content":"动态文案", "imageDesc":"图片描述或空", "likes":随机数字, "isLiked":false, "comments":[]}]}
+只输出JSON。`;
+
+                const res = await roche.ai.chat({
+                  messages: [{ role: "system", content: sysPrompt }, { role: "user", content: `我的人设是：${state.myPersona}，请生成广场动态。` }],
+                  temperature: 0.95 
+                });
+                
+                let str = res.text.trim();
+                const match = str.match(/```(?:json)?\s*([\s\S]*?)```/i);
+                if (match) str = match[1].trim();
+                const firstBrace = str.indexOf('{'); const lastBrace = str.lastIndexOf('}');
+                if (firstBrace !== -1 && lastBrace !== -1) str = str.slice(firstBrace, lastBrace + 1);
+                
+                const aiRes = JSON.parse(str);
+                if (aiRes && Array.isArray(aiRes.posts)) {
+                    state.squarePosts = aiRes.posts;
+                    saveStorage();
+                }
+            } catch(e) {
+                roche.ui.toast("刷新广场失败，请重试。");
+            }
+            renderSquare();
+        }
+
+        function renderSquare() {
+            const feedEl = document.getElementById('sm-square-feed');
+            feedEl.innerHTML = '';
+            
+            if(state.squarePosts.length === 0) {
+               feedEl.innerHTML = `<div class="sm-refresh-square" id="btn-refresh-sq-empty">一键刷新广场</div>`;
+               document.getElementById('btn-refresh-sq-empty').onclick = generateSquarePosts;
+               return;
+            }
+
+            state.squarePosts.forEach(post => {
+                const postEl = document.createElement('div');
+                postEl.className = 'sm-post';
+                
+                // 图片渲染
+                let imgHtml = '';
+                if(post.imageDesc) {
+                    imgHtml = `<div class="sm-post-img-wrap"><img src="https://i.postimg.cc/KYr2qRCK/1.jpg" style="width:100%; opacity:0.8;"><div class="sm-post-img-text">[照片: ${post.imageDesc}]</div></div>`;
+                }
+
+                // 评论列表渲染
+                let commentsHtml = '';
+                if(post.comments && post.comments.length > 0) {
+                    commentsHtml = `<div class="sm-comments">` + 
+                        post.comments.map(c => `
+                          <div class="sm-comment-item">
+                            <span class="sm-comment-name">${c.author}:</span>${c.text}
+                            ${c.isMe ? `<span class="sm-comment-del" onclick="deleteComment('${post.id}', '${c.id}')">删除</span>` : ''}
+                          </div>
+                        `).join('') + `</div>`;
+                }
+
+                postEl.innerHTML = `
+                  <div class="sm-post-header">
+                    <div class="sm-post-av click-to-chat" title="私聊Ta">${post.author.name.substring(0,1)}</div>
+                    <div class="sm-post-info">
+                      <div class="sm-post-name">${post.author.name}</div>
+                      <div class="sm-post-time">刚刚</div>
+                    </div>
+                  </div>
+                  <div class="sm-post-text">${post.content}</div>
+                  ${imgHtml}
+                  <div class="sm-post-actions">
+                    <button class="sm-post-act-btn btn-like-post ${post.isLiked ? 'liked' : ''}">
+                      ${post.isLiked ? '❤️' : '🤍'} <span>${post.likes + (post.isLiked?1:0)}</span>
+                    </button>
+                    <button class="sm-post-act-btn btn-comment-post">💬 评论</button>
+                  </div>
+                  ${commentsHtml}
+                `;
+
+                // 绑定点击头像私聊
+                postEl.querySelector('.click-to-chat').onclick = () => {
+                   initiateChatFromSquare(post.author);
+                };
+
+                // 绑定点赞
+                postEl.querySelector('.btn-like-post').onclick = () => {
+                    post.isLiked = !post.isLiked;
+                    saveStorage(); renderSquare();
+                };
+
+                // 绑定评论
+                postEl.querySelector('.btn-comment-post').onclick = async () => {
+                    const text = await showCustomPrompt(`评论 ${post.author.name} 的动态`, "想说点什么？");
+                    if(text) {
+                        if(!post.comments) post.comments = [];
+                        post.comments.push({ id: Date.now().toString(), author: '我', text: text, isMe: true });
+                        saveStorage(); renderSquare();
+                        triggerPostAuthorReply(post, text); // 触发AI回复
+                    }
+                };
+
+                feedEl.appendChild(postEl);
+            });
+
+            // 底部添加刷新按钮
+            const refreshBtn = document.createElement('div');
+            refreshBtn.className = 'sm-refresh-square';
+            refreshBtn.textContent = '刷新这批动态 🚀';
+            refreshBtn.onclick = generateSquarePosts;
+            feedEl.appendChild(refreshBtn);
+        }
+
+        window.deleteComment = function(postId, commentId) {
+            const post = state.squarePosts.find(p => p.id === postId);
+            if(post) {
+                post.comments = post.comments.filter(c => c.id !== commentId);
+                saveStorage(); renderSquare();
+            }
+        };
+
+        // 广场点击头像，将该路人拉入消息列表并打开聊天
+        function initiateChatFromSquare(authorInfo) {
+            let existingPeer = state.likedList.find(u => u.id === authorInfo.id);
+            if(!existingPeer) {
+                existingPeer = {
+                    id: authorInfo.id, isChar: authorInfo.isChar, name: authorInfo.name,
+                    avatar: authorInfo.avatar, persona: authorInfo.persona, tag: "广场偶遇"
+                };
+                state.likedList.unshift(existingPeer);
+                saveStorage();
+            }
+            openChat(existingPeer);
+        }
+
+        // AI 针对你的评论进行回复
+        async function triggerPostAuthorReply(post, myCommentText) {
+            try {
+                const sysPrompt = `你现在是交友软件上的用户「${post.author.name}」。你的设定是：${post.author.persona}。
+你在广场上发了一条动态：“${post.content}” ${post.imageDesc ? '(附图:'+post.imageDesc+')' : ''}。
+现在，有人评论了你：“${myCommentText}”。
+请根据你的性格设定，简短回复这个人。如果他在撩你，你可以顺水推舟或拒绝。只需输出回复的纯文本即可。`;
+                
+                const res = await roche.ai.chat({ messages: [{ role: "system", content: sysPrompt }], temperature: 0.8 });
+                const reply = res.text.trim();
+                
+                post.comments.push({ id: Date.now().toString(), author: post.author.name, text: `回复 @我: ${reply}`, isMe: false });
+                saveStorage(); renderSquare();
+            } catch(e) {
+                console.log("AI回复评论失败");
+            }
+        }
         // ==========================================
         // 9. 提取人设与主记忆沉淀
         // ==========================================
@@ -1277,7 +1496,10 @@ window.RochePlugin.register({
               document.querySelectorAll('.sm-nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
               const targetId = btn.getAttribute('data-target');
               document.querySelectorAll('.sm-view').forEach(v => v.classList.remove('active')); document.getElementById(targetId).classList.add('active');
-              if (targetId === 'view-inbox') renderInbox(); if (targetId === 'view-daily') fetchDailyFortune();
+              if (targetId === 'view-inbox') renderInbox(); if (targetId === 'view-square') {
+                  if (state.squarePosts.length === 0) generateSquarePosts();
+                  else renderSquare();
+              }
             });
           });
           
@@ -1399,7 +1621,7 @@ window.RochePlugin.register({
 
         async function bootApp() {
           await loadStorage(); await loadRocheContext(); bindEvents();
-          renderInbox(); fetchDailyFortune(); renderNextCard(); 
+          renderInbox();  renderNextCard(); 
         }
         bootApp();
       },
