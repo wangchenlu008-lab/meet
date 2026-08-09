@@ -286,7 +286,7 @@ window.RochePlugin.register({
           <div class="sm-view" id="view-me">
             <div class="sm-panel">
               <h3>👤 我的档案</h3>
-              <p>你在 Roche 当前活跃的人设，是匹配的坐标锚点：</p>
+              <p>你在 Roche 当前活跃的人设</p>
               <p style="background:#f8f9fa; padding:14px; border-radius:16px; font-size:13.5px; color:#555; border: 1px solid #eee;" id="sm-my-persona">加载中...</p>
             </div>
             
@@ -690,7 +690,7 @@ window.RochePlugin.register({
             actions.style.display = 'none';
             let html = `<div class="sm-empty-state"><div style="font-size:32px; margin-bottom:12px;">🌟</div><div style="color:#888; font-size:14px; margin-bottom: 24px;">这一批卡片已经看完了</div>`;
             if (state.passedDeck.length > 0) html += `<button class="sm-btn-outline" id="btn-rewind" style="margin-bottom:16px; width:100%;">🔙 重新查看错过的 Ta</button>`;
-            html += `<button class="sm-btn-primary" id="btn-fetch-more" style="width:100%;">🚀 重新感应新批次</button></div>`;
+            html += `<button class="sm-btn-primary" id="btn-fetch-more" style="width:100%;">🚀 发现</button></div>`;
             container.innerHTML = html;
             document.getElementById('btn-fetch-more')?.addEventListener('click', generateCards);
             document.getElementById('btn-rewind')?.addEventListener('click', () => { state.deckPool = [...state.passedDeck]; state.passedDeck = []; renderNextCard(); });
@@ -1289,7 +1289,7 @@ window.RochePlugin.register({
                   document.querySelectorAll('.sm-mode-btn').forEach(b => b.classList.remove('active'));
                   btn.classList.add('active');
                   state.discoverMode = btn.dataset.mode;
-                  roche.ui.toast(state.discoverMode === 'r18' ? "已开启狂野模式 😈 (请重新感应)" : "已切换为纯爱模式 🌸 (请重新感应)");
+                  roche.ui.toast(state.discoverMode === 'r18' ? "已开启狂野模式 😈 " : "已切换为纯爱模式 🌸 ");
                   
                   // 清空当前屏幕上的卡片，弹出“寻觅”的按钮让用户自己点
                   if (document.getElementById('view-discover').classList.contains('active')) {
