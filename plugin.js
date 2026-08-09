@@ -1,7 +1,7 @@
 window.RochePlugin.register({
   id: "soul-meet-app",
   name: "Soul遇见",
-  version: "1.4.0",
+  version: "1.5.0",
   apps: [
     {
       id: "soul-meet-main",
@@ -11,7 +11,7 @@ window.RochePlugin.register({
         container.classList.add("soul-meet-container");
         
         // ==========================================
-        // 1. 注入 CSS (融合原优雅设计与新聊天/多选/动画需求)
+        // 1. 注入 CSS (融合原优雅设计、新聊天、多选、立体气泡、主题皮肤)
         // ==========================================
         const style = document.createElement("style");
         style.id = "soul-meet-styles";
@@ -62,7 +62,8 @@ window.RochePlugin.register({
           .sm-chip.selected { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: #fff; border-color: transparent; font-weight: 700;}
           .sm-pref-chip.selected { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; border-color: transparent;}
           .sm-custom-input-wrap { display: flex; gap: 8px; margin-top: 8px; width: 100%;}
-          .sm-custom-input { flex: 1; padding: 8px 12px; border-radius: 16px; border: 1px solid #eee; font-size: 13px; outline: none;}
+          .sm-custom-input { flex: 1; padding: 10px 12px; border-radius: 14px; border: 1px solid #ddd; font-size: 14px; outline: none; background: #fafafa; transition: 0.2s; }
+          .sm-custom-input:focus { border-color: #ff9a9e; background: #fff; }
           
           /* 消息列表 */
           .sm-list-item { display: flex; padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.03); align-items: center; gap: 14px; cursor: pointer; transition: background 0.2s; margin: 0 8px; border-radius: 16px; user-select: none; -webkit-user-select: none;}
@@ -74,8 +75,8 @@ window.RochePlugin.register({
           .sm-list-sub { font-size: 13.5px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .sm-list-tag { font-size: 10px; border: 1px solid #ff6b81; color: #ff6b81; padding: 2px 8px; border-radius: 12px; margin-left: 6px; font-weight: 600;}
           
-          /* 聊天室与气泡 */
-          .sm-chat-room { position: absolute; inset: 0; background: #fbfbfd; z-index: 50; display: none; flex-direction: column; }
+          /* 聊天室框架 */
+          .sm-chat-room { position: absolute; inset: 0; background: #fbfbfd; z-index: 50; display: none; flex-direction: column; transition: background 0.3s;}
           .sm-chat-room.open { display: flex; }
           .sm-chat-head { padding: 12px 16px; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; z-index: 10;}
           .sm-chat-tools { display: flex; gap: 8px; }
@@ -84,14 +85,64 @@ window.RochePlugin.register({
           .sm-msg-wrapper { display: flex; flex-direction: column; max-width: 80%; user-select: none; -webkit-user-select: none; }
           .sm-msg-wrapper.me { align-self: flex-end; align-items: flex-end; }
           .sm-msg-wrapper.peer { align-self: flex-start; align-items: flex-start; }
-          .sm-msg { padding: 10px 14px; border-radius: 20px; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; position: relative;}
+          
+          /* === 气泡系统升级：继承第一版的立体与主题系统 === */
+          .sm-msg { 
+            position: relative;
+            padding: 12px 16px; 
+            border-radius: 25px; 
+            font-size: 14.5px; 
+            line-height: 1.5; 
+            white-space: pre-wrap; 
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), inset 0 4px 15px rgba(255, 255, 255, 0.4), inset 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer; 
+            transition: filter 0.2s;
+          }
           .sm-msg:active { filter: brightness(0.9); }
-          .sm-msg.me { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; border-bottom-right-radius: 4px; }
-          .sm-msg.peer { background: #fff; border: 1px solid #eee; border-bottom-left-radius: 4px; color: #333;}
+          .sm-msg.me { border-bottom-right-radius: 4px; }
+          .sm-msg.peer { border-bottom-left-radius: 4px; }
+          
+          /* 默认主题气泡 */
+          .sm-chat-history[data-theme="default"] .sm-msg.me, .sm-chat-history:not([data-theme]) .sm-msg.me { background: radial-gradient(ellipse at 100% 20%, rgba(126, 185, 67, 0.7) 0%, rgba(160, 233, 86, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #1a3d00; }
+          .sm-chat-history[data-theme="default"] .sm-msg.peer, .sm-chat-history:not([data-theme]) .sm-msg.peer { background: radial-gradient(ellipse at 100% 20%, rgba(180, 180, 180, 0.7) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #333; }
+          
+          /* 粉蓝主题 */
+          .sm-chat-history[data-theme="pink_blue"] .sm-msg.me { background: radial-gradient(ellipse at 100% 20%, rgba(255, 195, 201, 0.7) 0%, rgba(250, 218, 221, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #d88499; }
+          .sm-chat-history[data-theme="pink_blue"] .sm-msg.peer { background: radial-gradient(ellipse at 100% 20%, rgba(169, 191, 209, 0.7) 0%, rgba(214, 234, 248, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #283747; }
+          /* 蓝白主题 */
+          .sm-chat-history[data-theme="blue_white"] .sm-msg.me { background: radial-gradient(ellipse at 100% 20%, rgba(142, 186, 230, 0.7) 0%, rgba(204, 229, 255, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #004085; }
+          .sm-chat-history[data-theme="blue_white"] .sm-msg.peer { background: radial-gradient(ellipse at 100% 20%, rgba(223, 223, 223, 0.7) 0%, rgba(248, 249, 250, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #383d41; }
+          /* 紫黄主题 */
+          .sm-chat-history[data-theme="purple_yellow"] .sm-msg.me { background: radial-gradient(ellipse at 100% 20%, rgba(191, 191, 222, 0.7) 0%, rgba(230, 230, 250, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #4B0082; }
+          .sm-chat-history[data-theme="purple_yellow"] .sm-msg.peer { background: radial-gradient(ellipse at 100% 20%, rgba(230, 230, 189, 0.7) 0%, rgba(255, 250, 205, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #5C4033; }
+          /* 黑白主题 */
+          .sm-chat-history[data-theme="black_white"] .sm-msg.me { background: radial-gradient(ellipse at 100% 20%, rgba(79, 79, 79, 0.7) 0%, rgba(52, 58, 64, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #f8f9fa; }
+          .sm-chat-history[data-theme="black_white"] .sm-msg.peer { background: radial-gradient(ellipse at 100% 20%, rgba(223, 223, 223, 0.7) 0%, rgba(248, 249, 250, 0.5) 40%, rgba(255, 255, 255, 0.4) 100%); color: #343a40; }
+
           .sm-quote-box { background: rgba(0,0,0,0.05); padding: 6px 10px; border-radius: 8px; font-size: 12px; margin-bottom: 6px; color: inherit; opacity: 0.8; border-left: 3px solid rgba(0,0,0,0.1); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
           
-          /* 聊天输入框 (区分发送与AI回复) */
-          .sm-chat-input-area { padding: 10px 16px; background: #fff; border-top: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 8px; padding-bottom:calc(10px + env(safe-area-inset-bottom, 0px)); }
+          /* 特殊模拟卡片（透明外壳） */
+          .sm-msg.is-transparent { padding: 0 !important; background: transparent !important; box-shadow: none !important; border: none !important; border-radius:0 !important; }
+          /* 转账 */
+          .sm-transfer-card { width: 190px; border-radius: 14px; padding: 14px; color: #3a7bb4; position: relative; overflow: hidden; pointer-events: none;}
+          .sm-msg.me .sm-transfer-card { background: radial-gradient(circle at top left, #e2f0ff, #b0d2f7); }
+          .sm-msg.peer .sm-transfer-card { background: radial-gradient(circle at top left, #d6ebff, #c2e0ff); }
+          .sm-transfer-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+          .sm-transfer-amount { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+          .sm-transfer-note { font-size: 11px; opacity: 0.9; border-top: 1px solid rgba(26, 56, 82, 0.15); padding-top: 6px; }
+          /* 语音 */
+          .sm-voice-message { display: flex; align-items: center; padding: 10px 14px; min-width: 100px; max-width: 220px; gap: 8px; font-size: 14.5px; border-radius: 20px; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); color: #333; border: 1px solid rgba(255,255,255,0.4); pointer-events: none;}
+          .sm-msg.me .sm-voice-message { flex-direction: row-reverse; background: rgba(254, 207, 239, 0.8); }
+          /* 照片 */
+          .sm-ai-image-wrap { display: flex; flex-direction: column; align-items: center; pointer-events: none;}
+          .sm-ai-image { max-width: 200px; border-radius: 14px; display: block; border: 2px solid rgba(255,255,255,0.7); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+          .sm-ai-image-desc { font-size: 12px; color: #555; margin-top: 8px; text-align: center; background: rgba(255,255,255,0.6); padding: 4px 10px; border-radius: 10px; backdrop-filter: blur(4px); max-width: 180px; word-break: break-all;}
+
+          /* 聊天输入框区域升级 */
+          .sm-chat-input-area { padding: 10px 16px; background: rgba(255,255,255,0.85); backdrop-filter:blur(10px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 8px; padding-bottom:calc(10px + env(safe-area-inset-bottom, 0px)); }
+          .sm-chat-actions-top { display: flex; gap: 10px; align-items: center; padding-bottom: 2px; }
+          .sm-action-icon-btn { font-size: 16px; width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #555; border: 1px solid #eee; cursor: pointer; display:flex; justify-content:center; align-items:center; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);}
+          .sm-action-icon-btn:hover { background: #f0f0f0; transform: scale(1.05); }
           .sm-input-row { display: flex; gap: 10px; align-items: flex-end; }
           .sm-chat-input { flex: 1; padding: 10px 16px; border-radius: 20px; border: 1px solid #eee; outline: none; font-size: 14.5px; background:#f9f9f9; resize: none; max-height: 100px;}
           .sm-chat-input:focus { border-color: #ffb8b8; background: #fff; }
@@ -99,7 +150,7 @@ window.RochePlugin.register({
           .sm-chat-send { background: #ff6b81; color: #fff; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 16px; display:flex; align-items:center; justify-content:center;}
           .sm-chat-wait { background: #f0f0f0; color: #555; border: 1px solid #e0e0e0; padding: 0 14px; height: 38px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 13px; display:flex; align-items:center; gap:4px; }
           
-          /* 模态弹窗 (人设/长按菜单) */
+          /* 模态弹窗 */
           .sm-modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index:100; display:none; align-items:center; justify-content:center; padding: 20px;}
           .sm-modal-overlay.open { display:flex; }
           .sm-modal { background:#fff; width:100%; max-width:320px; border-radius:24px; padding:20px; display:flex; flex-direction:column; gap:16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);}
@@ -199,19 +250,28 @@ window.RochePlugin.register({
               <button class="sm-header-btn" id="btn-chat-back" style="font-size:22px; padding:0 10px;">‹</button>
               <span id="chat-peer-name" style="font-weight:800; font-size:16px;">名字</span>
               <div class="sm-chat-tools">
+                <button class="sm-tool-btn" id="btn-chat-settings" title="聊天设置">⚙️</button>
                 <button class="sm-tool-btn" id="btn-chat-persona" style="display:none;" title="生成档案">提取人设</button>
                 <button class="sm-tool-btn" id="btn-chat-memory" title="沉淀到 Roche 主记忆">记录</button>
               </div>
             </div>
             <div class="sm-chat-history" id="chat-history"></div>
+            
             <div class="sm-chat-input-area">
+              <!-- 多媒体动作快捷栏 -->
+              <div class="sm-chat-actions-top">
+                <button class="sm-action-icon-btn" id="btn-send-photo" title="发送照片">📷</button>
+                <button class="sm-action-icon-btn" id="btn-send-transfer" title="转账">💰</button>
+                <button class="sm-action-icon-btn" id="btn-send-voice" title="发送语音">🎤</button>
+              </div>
+              
               <!-- 引用提示区 -->
-              <div id="chat-quote-preview" style="display:none; width:100%; font-size:12px; color:#666; background:#f0f0f0; padding:6px 10px; border-radius:8px; align-items:center; justify-content:space-between;">
+              <div id="chat-quote-preview" style="display:none; width:100%; font-size:12px; color:#666; background:#f0f0f0; padding:6px 10px; border-radius:8px; align-items:center; justify-content:space-between; margin-bottom:6px;">
                  <span id="chat-quote-text" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;"></span>
                  <span id="btn-cancel-quote" style="cursor:pointer; padding-left:10px; font-weight:bold; color:#888;">✕</span>
               </div>
               <div class="sm-input-row">
-                <textarea class="sm-chat-input" id="chat-input" rows="1" placeholder="输入消息 (回车直接发送)..."></textarea>
+                <textarea class="sm-chat-input" id="chat-input" rows="1" placeholder="输入消息 (回车发送)..."></textarea>
                 <div class="sm-action-group">
                   <button class="sm-chat-wait" id="chat-reply" title="等待对方回复">✨ 回复</button>
                   <button class="sm-chat-send" id="chat-send">➤</button>
@@ -230,6 +290,48 @@ window.RochePlugin.register({
             </div>
           </div>
 
+          <!-- 聊天设置弹窗 -->
+          <div class="sm-modal-overlay" id="modal-chat-settings">
+            <div class="sm-modal">
+              <h3 style="margin:0;">⚙️ 聊天设定</h3>
+              <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+                <label style="font-size:13px;font-weight:600;">为 Ta 修改备注</label>
+                <input type="text" id="setting-alias" class="sm-custom-input" placeholder="新的备注名...">
+                
+                <label style="font-size:13px;font-weight:600;">聊天背景 (网络图片 URL)</label>
+                <input type="text" id="setting-bg" class="sm-custom-input" placeholder="留空则使用默认背景">
+                
+                <label style="font-size:13px;font-weight:600;">气泡主题皮肤</label>
+                <select id="setting-theme" class="sm-custom-input" style="cursor:pointer;">
+                  <option value="default">默认 (清新绿白)</option>
+                  <option value="pink_blue">粉蓝之恋</option>
+                  <option value="blue_white">经典蓝白</option>
+                  <option value="purple_yellow">紫黄梦幻</option>
+                  <option value="black_white">暗黑白简</option>
+                </select>
+              </div>
+              <div class="sm-modal-btns" style="margin-top:20px;">
+                <button class="sm-modal-btn sm-btn-outline" id="btn-cancel-settings">取消</button>
+                <button class="sm-modal-btn sm-btn-primary" id="btn-save-settings">保存</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 转账动作弹窗 -->
+          <div class="sm-modal-overlay" id="modal-transfer">
+            <div class="sm-modal" style="background:#f0f8ff; border: 1px solid #c1ddf9; max-width: 260px;">
+              <h3 style="color:#5c7ba3; text-align:center; font-size:16px; margin:0;">💸 给 Ta 一个惊喜</h3>
+              <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+                <input type="number" id="transfer-amount" class="sm-custom-input" style="border-color:#c1ddf9;" placeholder="金额 (0.00)" min="0">
+                <input type="text" id="transfer-note" class="sm-custom-input" style="border-color:#c1ddf9;" placeholder="备注留言..." maxlength="20">
+              </div>
+              <div class="sm-modal-btns" style="justify-content:space-between; margin-top:15px;">
+                <button class="sm-modal-btn" id="btn-cancel-transfer" style="background:#d9e9fd; color:#5c7ba3; flex:1;">取消</button>
+                <button class="sm-modal-btn" id="btn-confirm-transfer" style="background:#5c9de0; color:#fff; flex:1;">确认转账</button>
+              </div>
+            </div>
+          </div>
+
           <!-- 通用 Action Sheet：列表长按/气泡长按/点击菜单 -->
           <div class="sm-modal-overlay" id="modal-action-sheet" style="align-items: flex-end; padding:0;">
             <div class="sm-action-sheet" id="sheet-content">
@@ -238,20 +340,22 @@ window.RochePlugin.register({
           </div>
         `;
         container.appendChild(appDOM);
+
         // ==========================================
         // 3. 全局状态、多世界书存储与底层 API 封装
         // ==========================================
         const state = {
           deckPool: [],     
-          passedDeck: [],   // 后悔药池
+          passedDeck: [],   
           currentCard: null,
           likedList: [],    
           chatHistories: {},
+          chatSettings: {},  // 存储每个会话的主题、背景、备注
           myPersona: "",
           worldbooks: [],
           selectedWbIds: [], 
-          selectedPrefs: [], // 用户选择或自定义的偏好标签
-          chatQuoteData: null // 当前准备引用的消息内容
+          selectedPrefs: [], 
+          chatQuoteData: null 
         };
 
         const DEFAULT_PREFS = ["幽默风趣", "温柔体贴", "高冷傲娇", "反差萌", "事业狂", "艺术家", "病娇", "直球克星", "爹系/妈系", "话痨"];
@@ -261,12 +365,14 @@ window.RochePlugin.register({
           if (liked) state.likedList = liked;
           const chats = await roche.storage.get("soul_meet_chats");
           if (chats) state.chatHistories = chats;
+          const chatSets = await roche.storage.get("soul_meet_chat_settings");
+          if (chatSets) state.chatSettings = chatSets;
+          
           const settings = await roche.storage.get("soul_meet_settings");
           if (settings) {
             if (Array.isArray(settings.selectedWbIds)) state.selectedWbIds = settings.selectedWbIds;
             if (Array.isArray(settings.selectedPrefs)) state.selectedPrefs = settings.selectedPrefs;
           } else {
-            // 如果首次使用，默认带上几个基本偏好供选择
             state.selectedPrefs = [...DEFAULT_PREFS]; 
           }
         }
@@ -274,6 +380,7 @@ window.RochePlugin.register({
         async function saveStorage() {
           await roche.storage.set("soul_meet_liked", state.likedList);
           await roche.storage.set("soul_meet_chats", state.chatHistories);
+          await roche.storage.set("soul_meet_chat_settings", state.chatSettings);
           await roche.storage.set("soul_meet_settings", { 
             selectedWbIds: state.selectedWbIds,
             selectedPrefs: state.selectedPrefs
@@ -286,7 +393,7 @@ window.RochePlugin.register({
               { role: "system", content: systemPrompt },
               { role: "user", content: userPrompt }
             ],
-            temperature: 0.95 // 偏高温度，带来鲜活随机感
+            temperature: 0.95 
           });
           if (!res || !res.text) throw new Error("AI未返回内容");
           let str = res.text.trim();
@@ -301,15 +408,12 @@ window.RochePlugin.register({
         }
 
         // ==========================================
-        // 4. 加载上下文与生成卡片 (增加自定义偏好与手势重构)
+        // 4. 加载上下文与生成卡片
         // ==========================================
         
-        // 渲染偏好标签 UI (支持自定义)
         function renderPreferences() {
           const prefListEl = document.getElementById('sm-pref-list');
           prefListEl.innerHTML = '';
-          
-          // 合并默认标签和用户自定义过的标签，去重
           const allTags = Array.from(new Set([...DEFAULT_PREFS, ...state.selectedPrefs]));
           
           allTags.forEach(tag => {
@@ -334,15 +438,12 @@ window.RochePlugin.register({
 
         async function loadRocheContext() {
           try {
-            // 1. 获取用户活跃人设
             const p = await roche.persona.getActiveUserPersona();
             state.myPersona = p || "一个期待在灵魂网络里遇见共鸣的人。";
             document.getElementById('sm-my-persona').textContent = state.myPersona;
 
-            // 2. 渲染偏好多选面板
             renderPreferences();
             
-            // 监听自定义偏好添加
             document.getElementById('btn-add-pref').onclick = () => {
                const input = document.getElementById('sm-custom-pref-input');
                const val = input.value.trim();
@@ -355,7 +456,6 @@ window.RochePlugin.register({
                }
             };
 
-            // 3. 获取世界书分类并渲染多选 Chip
             const wbs = await roche.worldbook.list();
             state.worldbooks = wbs || [];
             const wbListEl = document.getElementById('sm-wb-list');
@@ -388,7 +488,6 @@ window.RochePlugin.register({
           }
         }
 
-        // 生成推荐卡片池 (彻底解决职业死板、去除非人类跨界描述、大批量生成)
         async function generateCards() {
           const container = document.getElementById('sm-deck-container');
           document.getElementById('sm-card-actions').style.display = 'none';
@@ -400,16 +499,14 @@ window.RochePlugin.register({
             </div>`;
           
           let newCards = [];
-          state.passedDeck = []; // 清空后悔药池
+          state.passedDeck = []; 
 
-          // 1. 抓取 Roche 的 Char 充当“匿名网友”原住民 (新增匿名的抓奸可能性)
           try {
             const chars = await roche.character.list();
             const unlikedChars = chars.filter(c => !state.likedList.some(l => l.id === c.id));
             const pickedChars = unlikedChars.sort(() => 0.5 - Math.random()).slice(0, 1);
             for(const c of pickedChars) {
               const fullC = await roche.character.get(c.id);
-              // 注意：不要直接写明他是谁，让他以某个网名或原住民身份混在里面
               newCards.push({
                 id: c.id,
                 isChar: true,
@@ -423,7 +520,6 @@ window.RochePlugin.register({
             }
           } catch(e) {}
 
-          // 2. 结合世界书和偏好，批量生成鲜活的AI角色 (6~8个)
           try {
             let wbContext = "";
             if (state.selectedWbIds.length > 0) {
@@ -434,7 +530,6 @@ window.RochePlugin.register({
               wbContext = wbContext.substring(0, 1500); 
             }
 
-            // 根据用户勾选的偏好提供方向
             const activePrefs = state.selectedPrefs.filter(p => !DEFAULT_PREFS.includes(p) || document.querySelector(`.sm-pref-chip.selected:contains('${p}')`));
             let prefContext = activePrefs.length > 0 
               ? `请重点优先生成带有这些特质的人类：【${activePrefs.join("、")}】。` 
@@ -476,7 +571,6 @@ window.RochePlugin.register({
           renderNextCard();
         }
 
-        // 渲染单张卡片
         function renderNextCard() {
           const container = document.getElementById('sm-deck-container');
           const actions = document.getElementById('sm-card-actions');
@@ -507,7 +601,6 @@ window.RochePlugin.register({
           actions.style.display = 'flex';
           const card = state.deckPool[0];
           state.currentCard = card;
-          // 去除跨界的字眼
           const typeBadge = card.isChar 
             ? '<div class="sm-card-type" style="background: rgba(255,107,129,0.85);">原住民</div>' 
             : '<div class="sm-card-type">新朋友</div>';
@@ -524,12 +617,11 @@ window.RochePlugin.register({
             </div>
           `;
 
-          // 重新绑定基于鼠标和触摸的顺滑手势
           bindCardSwipe(document.getElementById('sm-active-card'));
         }
 
         // ==========================================
-        // 5. 手势滑动核心逻辑 (完美兼容多端)
+        // 5. 手势滑动核心逻辑
         // ==========================================
         function bindCardSwipe(el) {
           if (!el) return;
@@ -555,11 +647,11 @@ window.RochePlugin.register({
             const threshold = window.innerWidth * 0.25;
             
             if (deltaX > threshold) {
-              handleSwipeAction(true); // 右滑 喜欢
+              handleSwipeAction(true);
             } else if (deltaX < -threshold) {
-              handleSwipeAction(false); // 左滑 Pass
+              handleSwipeAction(false); 
             } else {
-              el.style.transform = `translate(0px, 0px) rotate(0deg)`; // 回弹
+              el.style.transform = `translate(0px, 0px) rotate(0deg)`;
             }
             
             document.removeEventListener('mousemove', onMove);
@@ -611,8 +703,9 @@ window.RochePlugin.register({
             renderNextCard();
           }, 300);
         }
+
         // ==========================================
-        // 6. 通用工具：长按与底部菜单 (Action Sheet)
+        // 6. 通用工具：长按与底部菜单、定制 Prompt
         // ==========================================
         function addLongPressListener(el, callback) {
           let timer = null;
@@ -622,7 +715,7 @@ window.RochePlugin.register({
             timer = setTimeout(() => {
               isFired = true;
               callback(e);
-            }, 500); // 500ms 长按触发
+            }, 500);
           };
           const cancel = () => { clearTimeout(timer); };
           el.addEventListener('mousedown', start);
@@ -657,12 +750,35 @@ window.RochePlugin.register({
           overlay.classList.add('open');
         }
 
+        // 定制轻量 Prompt（用于照片/语音）
+        function showCustomPrompt(title, placeholder) {
+          return new Promise(resolve => {
+            const overlay = document.createElement('div');
+            overlay.className = 'sm-modal-overlay open';
+            overlay.innerHTML = `
+              <div class="sm-modal" style="width:280px; text-align:center;">
+                <h3 style="margin-bottom:5px; font-size:16px;">${title}</h3>
+                <input type="text" id="prompt-input" class="sm-custom-input" placeholder="${placeholder}" style="margin-top:10px;">
+                <div class="sm-modal-btns" style="justify-content:space-between; margin-top:20px;">
+                  <button id="prompt-cancel" class="sm-modal-btn" style="background:#eee; flex:1;">取消</button>
+                  <button id="prompt-confirm" class="sm-modal-btn sm-btn-primary" style="flex:1;">确定</button>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(overlay);
+            const input = overlay.querySelector('#prompt-input');
+            overlay.querySelector('#prompt-cancel').onclick = () => { overlay.remove(); resolve(null); };
+            overlay.querySelector('#prompt-confirm').onclick = () => { overlay.remove(); resolve(input.value.trim()); };
+            input.focus();
+          });
+        }
+
         document.getElementById('modal-action-sheet').addEventListener('click', (e) => {
           if (e.target.id === 'modal-action-sheet') e.target.classList.remove('open');
         });
 
         // ==========================================
-        // 7. 运势测算、消息列表与聊天交互
+        // 7. 运势、消息列表与核心聊天互动
         // ==========================================
 
         async function fetchDailyFortune() {
@@ -693,20 +809,30 @@ window.RochePlugin.register({
             const item = document.createElement('div');
             item.className = 'sm-list-item';
             const hist = state.chatHistories[u.id] || [];
-            const lastMsg = hist.length > 0 ? hist[hist.length-1].content : "刚刚建立了联系，发个消息吧~";
+            
+            // 处理特殊消息类型的列表回显
+            let lastMsgDisp = "刚刚建立了联系，发个消息吧~";
+            if (hist.length > 0) {
+               const last = hist[hist.length - 1];
+               if (last.type === 'transfer') lastMsgDisp = '[转账]';
+               else if (last.type === 'voice_message') lastMsgDisp = '[语音]';
+               else if (last.type === 'user_photo' || last.type === 'ai_image') lastMsgDisp = '[照片]';
+               else lastMsgDisp = last.content;
+            }
+            
+            // 处理别名
+            const cSet = state.chatSettings[u.id] || {};
+            const dispName = cSet.alias || u.name;
             
             item.innerHTML = `
               <div class="sm-list-av">${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : u.name.substring(0,1)}</div>
               <div class="sm-list-mid">
-                <div class="sm-list-name">${u.name} <span class="sm-list-tag">${u.isChar ? '原住民' : '新朋友'}</span></div>
-                <div class="sm-list-sub">${lastMsg}</div>
+                <div class="sm-list-name">${dispName} <span class="sm-list-tag">${u.isChar ? '原住民' : '新朋友'}</span></div>
+                <div class="sm-list-sub">${lastMsgDisp}</div>
               </div>
             `;
             
-            // 单击进入聊天
             item.onclick = () => openChat(u);
-            
-            // 长按操作
             addLongPressListener(item, () => {
               showActionSheet([
                 { label: '清空聊天记录', onClick: () => {
@@ -716,6 +842,7 @@ window.RochePlugin.register({
                 { label: '删除该好友', danger: true, onClick: () => {
                   state.likedList = state.likedList.filter(l => l.id !== u.id);
                   delete state.chatHistories[u.id];
+                  delete state.chatSettings[u.id];
                   saveStorage(); renderInbox(); roche.ui.toast("已解除羁绊");
                 }}
               ]);
@@ -728,7 +855,8 @@ window.RochePlugin.register({
 
         function openChat(peer) {
           currentPeer = peer;
-          document.getElementById('chat-peer-name').textContent = peer.name;
+          const cSet = state.chatSettings[peer.id] || { theme: 'default', bg: '', alias: '' };
+          document.getElementById('chat-peer-name').textContent = cSet.alias || peer.name;
           document.getElementById('btn-chat-persona').style.display = peer.isChar ? "none" : "block";
           
           state.chatQuoteData = null;
@@ -761,10 +889,20 @@ window.RochePlugin.register({
         function renderChatHistory() {
           const container = document.getElementById('chat-history');
           container.innerHTML = "";
+          
+          // 应用主题与背景
+          const cSet = state.chatSettings[currentPeer.id] || { theme: 'default', bg: '' };
+          container.dataset.theme = cSet.theme;
+          const roomEl = document.getElementById('sm-chat-room');
+          roomEl.style.backgroundImage = cSet.bg ? `url(${cSet.bg})` : 'none';
+          roomEl.style.backgroundSize = 'cover';
+          roomEl.style.backgroundPosition = 'center';
+          roomEl.style.backgroundColor = cSet.bg ? 'transparent' : '#fbfbfd';
+
           const hist = state.chatHistories[currentPeer.id] || [];
           
           if (hist.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#ccc; font-size:12px; margin-top:20px;">—— 你们在 Soul Meet 的初次对话 ——</div>`;
+            container.innerHTML = `<div style="text-align:center; color:#ccc; font-size:12px; margin-top:20px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">—— 你们在 Soul Meet 的初次对话 ——</div>`;
           }
 
           hist.forEach((msg, idx) => {
@@ -774,18 +912,35 @@ window.RochePlugin.register({
             const el = document.createElement('div');
             el.className = `sm-msg ${msg.role === 'user' ? 'me' : 'peer'}`;
             
+            // 处理特殊动作卡片 (多媒体支持)
+            let contentHtml = msg.content;
+            let isTransparent = false;
+
+            if (msg.type === 'transfer') {
+                isTransparent = true;
+                contentHtml = `<div class="sm-transfer-card"><div class="sm-transfer-title">💸 ${msg.role === 'user' ? '转账给Ta' : '收到一笔转账'}</div><div class="sm-transfer-amount">¥ ${Number(msg.amount).toFixed(2)}</div><div class="sm-transfer-note">${msg.note || '对方没有留下备注哦~'}</div></div>`;
+            } else if (msg.type === 'voice_message') {
+                isTransparent = true;
+                contentHtml = `<div class="sm-voice-message">🎤 <span>语音: ${msg.content}</span></div>`;
+            } else if (msg.type === 'user_photo' || msg.type === 'ai_image') {
+                isTransparent = true;
+                contentHtml = `<div class="sm-ai-image-wrap"><img src="https://i.postimg.cc/KYr2qRCK/1.jpg" class="sm-ai-image" alt="照片"><div class="sm-ai-image-desc">[图片描述：${msg.content}]</div></div>`;
+            }
+
+            if (isTransparent) el.classList.add('is-transparent');
+
             // 渲染引用
             let quoteHtml = '';
             if (msg.quote) {
               quoteHtml = `<div class="sm-quote-box">${msg.quote}</div>`;
             }
-            el.innerHTML = quoteHtml + msg.content;
+            el.innerHTML = quoteHtml + (contentHtml || '');
             
             // 气泡长按菜单
             addLongPressListener(el, () => {
               showActionSheet([
                 { label: '引用', onClick: () => {
-                  state.chatQuoteData = msg.content;
+                  state.chatQuoteData = (msg.type ? `[${msg.type === 'transfer' ? '转账' : msg.type === 'voice_message' ? '语音' : '图片'}]` : msg.content);
                   updateQuotePreviewUI();
                 }},
                 { label: '撤回/删除', danger: true, onClick: () => {
@@ -803,7 +958,7 @@ window.RochePlugin.register({
           container.scrollTop = container.scrollHeight;
         }
 
-        // 仅发送用户消息 (可以连发)
+        // 发送普通消息与特殊卡片
         function sendUserMessage() {
           if (!currentPeer) return;
           const input = document.getElementById('chat-input');
@@ -815,7 +970,7 @@ window.RochePlugin.register({
           const newMsg = { role: 'user', content: text };
           if (state.chatQuoteData) {
             newMsg.quote = state.chatQuoteData;
-            state.chatQuoteData = null; // 发送后清空引用
+            state.chatQuoteData = null; 
             updateQuotePreviewUI();
           }
 
@@ -827,7 +982,18 @@ window.RochePlugin.register({
           renderInbox();
         }
 
-        // 手动点击触发 AI 回复 (融合活人感、原住民抓奸)
+        function sendSpecialMsg(type, contentObj) {
+            if (!currentPeer) return;
+            if (!state.chatHistories[currentPeer.id]) state.chatHistories[currentPeer.id] = [];
+            
+            const newMsg = { role: 'user', type: type, ...contentObj };
+            state.chatHistories[currentPeer.id].push(newMsg);
+            saveStorage();
+            renderChatHistory();
+            renderInbox();
+        }
+
+        // 手动点击触发 AI 回复 (融入多媒体动作捕捉)
         async function triggerAiReply() {
           if (!currentPeer) return;
           const hist = state.chatHistories[currentPeer.id] || [];
@@ -856,45 +1022,74 @@ window.RochePlugin.register({
               sysPrompt += `\n【当前所处宇宙的常识法则】\n${wbContext.substring(0, 800)}\n请在聊天时自然体现你活在这个世界里，但绝对不要像在做科普，你只是个活在这个世界里的普通人。`;
             }
             
-            // 联通已有角色的记忆 & 抓奸提示
             if (currentPeer.isChar) {
                sysPrompt += `\n【重要身份秘密 (抓奸玩法)】：
-你其实是主世界中的【${currentPeer.name}】本人。但你现在是偷偷注册了这个匿名交友软件在使用。如果我对你的身份起疑、或者直接质问你为什么来玩交友软件（俗称“抓奸”），你必须根据你的性格做出最真实的反应（比如：心虚掩饰、死鸭子嘴硬、慌张、或者理直气壮地反问我为什么也在玩）。千万不要承认自己是AI。`;
-
-               try {
-                 const charData = await roche.character.get(currentPeer.id);
-                 if (charData && charData.conversationId) {
-                   const msgs = await roche.memory.getShortTerm({ conversationId: charData.conversationId, limit: 8 });
-                   if (msgs && msgs.length > 0) {
-                     sysPrompt += `\n【你在主世界与我最近的记忆潜意识】(作为关系参考，如果被抓包可以顺带提及)：\n`;
-                     msgs.reverse().forEach(m => {
-                       sysPrompt += `${m.senderName || (m.type==='user'?'我':'你')}: ${m.text}\n`;
-                     });
-                   }
-                 }
-               } catch(e) {}
+你其实是主世界中的【${currentPeer.name}】本人。但你现在是偷偷注册了这个匿名交友软件在使用。如果我对你的身份起疑、或者直接质问你为什么来玩交友软件（俗称“抓奸”），你必须根据你的性格做出最真实的反应。千万不要承认自己是AI。`;
             }
 
-            sysPrompt += `\n【最高指令：活人感规范】
-1. 你是一个有喜怒哀乐的【真实人类/角色】，不是AI，不是客服！必须完全沉浸。
-2. 说话口语化，像发微信一样，可以用少量网络用语，可以敷衍、吐槽、装高冷，完全遵循你的人设。
-3. 绝对禁止使用括号或星号进行动作和神态描写（如：*笑*、(喝口茶)、[挑眉]）。只能输出纯文本！！！
-4. 每次回复限制在 40 字以内。不要急于推动剧情，像真人一样一句一句聊。`;
+            sysPrompt += `\n【最高指令：活人感与多媒体规则】
+1. 你是一个有喜怒哀乐的真实人类，不是客服！必须完全沉浸。
+2. 说话口语化，像发微信一样。每次回复限制在 40 字以内。
+3. 绝对禁止使用括号或星号进行动作和神态描写（如：*笑*、[挑眉]）。只能输出纯文本！！！
+4. 如果你接收到了[转账]、[语音]或[照片]，请自然地做出合适的回应。
+5. **重要**：如果你情绪激动，想主动给我转账、发语音或发照片，请直接在你回复的文字最后附带特定标志（系统会自动解析）：
+ - 想转账：【动作：转账，金额：金额数字，备注：原因】
+ - 想发照片：【动作：照片，描述：画面描述】
+ - 想发语音：【动作：语音，内容：你想说的话】
+除此之外，不要解释你在做这些动作。不带则表示只发纯文字。`;
 
             const apiMsgs = [{ role: 'system', content: sysPrompt }];
             
-            // 取最近 15 条
+            // 拼装历史，将多媒体消息转化为AI可读的文本描述
             hist.slice(-15).forEach(m => {
-              // 转化引用内容以供 AI 理解
-              let content = m.content;
+              let content = m.content || "";
+              const prefix = m.role === 'user' ? '我' : '你';
+              if (m.type === 'transfer') content = `[${prefix} 发起转账: ${m.amount}元, 备注: ${m.note}]`;
+              else if (m.type === 'voice_message') content = `[${prefix} 语音: "${m.content}"]`;
+              else if (m.type === 'user_photo' || m.type === 'ai_image') content = `[${prefix} 发送了一张照片, 描述: "${m.content}"]`;
+
               if (m.quote) content = `(引用了刚才的话：${m.quote})\n${content}`;
               apiMsgs.push({ role: m.role, content: content });
             });
 
             const res = await roche.ai.chat({ messages: apiMsgs, temperature: 0.95 });
-            const replyText = res.text.trim().replace(/[\(\[\*].*?[\)\]\*]/g, ''); // 剔除动作描写兜底
+            let replyText = res.text.trim().replace(/[\(\[\*].*?[\)\]\*]/g, ''); // 兜底剔除动作描写
 
-            state.chatHistories[currentPeer.id].push({ role: 'assistant', content: replyText });
+            // 解析AI可能主动发送的动作
+            const actionMatch = replyText.match(/【动作：(.*?)】/);
+            let aiType = null, aiAmount = null, aiNote = null, aiDesc = null;
+
+            if (actionMatch) {
+                const actionStr = actionMatch[1];
+                replyText = replyText.replace(actionMatch[0], '').trim();
+                if (actionStr.includes('转账')) {
+                    aiType = 'transfer';
+                    const amtMatch = actionStr.match(/金额：(\d+)/);
+                    const noteMatch = actionStr.match(/备注：(.*?)$/);
+                    aiAmount = amtMatch ? parseFloat(amtMatch[1]) : 520;
+                    aiNote = noteMatch ? noteMatch[1] : '给你';
+                } else if (actionStr.includes('照片')) {
+                    aiType = 'ai_image';
+                    const descMatch = actionStr.match(/描述：(.*?)$/);
+                    aiDesc = descMatch ? descMatch[1] : '一张绝美的照片';
+                } else if (actionStr.includes('语音')) {
+                    aiType = 'voice_message';
+                    const contentMatch = actionStr.match(/内容：(.*?)$/);
+                    aiDesc = contentMatch ? contentMatch[1] : '...';
+                }
+            }
+
+            if (replyText) {
+                state.chatHistories[currentPeer.id].push({ role: 'assistant', content: replyText });
+            }
+            if (aiType === 'transfer') {
+                state.chatHistories[currentPeer.id].push({ role: 'assistant', type: 'transfer', amount: aiAmount, note: aiNote });
+            } else if (aiType === 'ai_image') {
+                state.chatHistories[currentPeer.id].push({ role: 'assistant', type: 'ai_image', content: aiDesc });
+            } else if (aiType === 'voice_message') {
+                state.chatHistories[currentPeer.id].push({ role: 'assistant', type: 'voice_message', content: aiDesc });
+            }
+
             saveStorage();
             renderChatHistory();
             renderInbox();
@@ -919,7 +1114,7 @@ window.RochePlugin.register({
           }
 
           roche.ui.toast("AI 正在撰写灵魂档案...");
-          const textLog = hist.map(m => (m.role==='user'?'我':'Ta') + ': ' + m.content).join('\n');
+          const textLog = hist.map(m => (m.role==='user'?'我':'Ta') + ': ' + (m.content||m.type)).join('\n');
           
           const sys = `你是一位顶级的小说/剧本角色设定师。请结合该角色的基础设定和下方的聊天记录，撰写一份详尽的、适合直接复制给大模型当人设 prompt (Persona) 的档案。
 包括：姓名、外貌气质、性格剖析、核心说话口癖、神秘过往、以及对"我"的特殊态度。无需废话，直接输出高质量档案文本。`;
@@ -949,7 +1144,7 @@ window.RochePlugin.register({
           if (!confirmed) return;
 
           roche.ui.toast("正在提炼重要羁绊...");
-          const textLog = hist.map(m => (m.role==='user'?'我':'Ta') + ': ' + m.content).join('\n');
+          const textLog = hist.map(m => (m.role==='user'?'我':'Ta') + ': ' + (m.content||m.type)).join('\n');
           
           try {
             const res = await roche.ai.chat({
@@ -1005,20 +1200,66 @@ window.RochePlugin.register({
             });
           });
 
-          // 聊天室事件
+          // 聊天室基础事件
           document.getElementById('btn-chat-back').addEventListener('click', closeChat);
-          
-          // 用户只发送，AI不回
           document.getElementById('chat-send').addEventListener('click', sendUserMessage);
           document.getElementById('chat-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { // 支持 shift+enter 换行
+            if (e.key === 'Enter' && !e.shiftKey) { 
               e.preventDefault();
               sendUserMessage();
             }
           });
-          
-          // 点击“✨回复”才触发AI
           document.getElementById('chat-reply').addEventListener('click', triggerAiReply);
+
+          // 聊天设定菜单
+          document.getElementById('btn-chat-settings').addEventListener('click', () => {
+              if(!currentPeer) return;
+              const cSet = state.chatSettings[currentPeer.id] || { theme: 'default', bg: '', alias: '' };
+              document.getElementById('setting-alias').value = cSet.alias;
+              document.getElementById('setting-bg').value = cSet.bg;
+              document.getElementById('setting-theme').value = cSet.theme;
+              document.getElementById('modal-chat-settings').classList.add('open');
+          });
+          document.getElementById('btn-cancel-settings').addEventListener('click', () => document.getElementById('modal-chat-settings').classList.remove('open'));
+          document.getElementById('btn-save-settings').addEventListener('click', () => {
+              if(!currentPeer) return;
+              if(!state.chatSettings[currentPeer.id]) state.chatSettings[currentPeer.id] = {};
+              state.chatSettings[currentPeer.id].alias = document.getElementById('setting-alias').value.trim();
+              state.chatSettings[currentPeer.id].bg = document.getElementById('setting-bg').value.trim();
+              state.chatSettings[currentPeer.id].theme = document.getElementById('setting-theme').value;
+              saveStorage();
+              document.getElementById('modal-chat-settings').classList.remove('open');
+              
+              // 立即应用设置
+              document.getElementById('chat-peer-name').textContent = state.chatSettings[currentPeer.id].alias || currentPeer.name;
+              renderChatHistory(); 
+              renderInbox(); 
+          });
+
+          // 多媒体动作栏事件
+          document.getElementById('btn-send-photo').addEventListener('click', async () => {
+              const desc = await showCustomPrompt("📷 发送照片", "请用文字描述你发送的照片画面：");
+              if (desc) sendSpecialMsg('user_photo', { content: desc });
+          });
+          document.getElementById('btn-send-voice').addEventListener('click', async () => {
+              const txt = await showCustomPrompt("🎤 发送语音", "请输入你想说的语音内容：");
+              if (txt) sendSpecialMsg('voice_message', { content: txt });
+          });
+          
+          // 转账独立弹窗事件
+          document.getElementById('btn-send-transfer').addEventListener('click', () => {
+              document.getElementById('transfer-amount').value = '';
+              document.getElementById('transfer-note').value = '';
+              document.getElementById('modal-transfer').classList.add('open');
+          });
+          document.getElementById('btn-cancel-transfer').addEventListener('click', () => document.getElementById('modal-transfer').classList.remove('open'));
+          document.getElementById('btn-confirm-transfer').addEventListener('click', () => {
+              const amount = parseFloat(document.getElementById('transfer-amount').value);
+              const note = document.getElementById('transfer-note').value.trim();
+              if (isNaN(amount) || amount <= 0) return roche.ui.toast("金额不能为空且须大于0");
+              document.getElementById('modal-transfer').classList.remove('open');
+              sendSpecialMsg('transfer', { amount, note });
+          });
 
           // 提取人设与记录羁绊
           document.getElementById('btn-chat-persona').addEventListener('click', extractPersona);
@@ -1027,12 +1268,13 @@ window.RochePlugin.register({
             document.getElementById('modal-persona').classList.remove('open');
           });
 
-          // 清空缓存
+          // 清空全局缓存
           document.getElementById('btn-clear-data').addEventListener('click', async () => {
             const ok = await roche.ui.confirm({ title: "危险操作", message: "将清空所有匹配列表与聊天记录，且不可恢复，是否继续？" });
             if (ok) {
               state.likedList = [];
               state.chatHistories = {};
+              state.chatSettings = {};
               await saveStorage();
               roche.ui.toast("数据已清空，灵魂关系回到原点。");
               renderInbox();
@@ -1048,8 +1290,6 @@ window.RochePlugin.register({
           
           renderInbox();
           fetchDailyFortune();
-
-          // 默认空状态，不自动跑Token，让用户手动点击“🚀 重新感应”
           renderNextCard(); 
         }
 
