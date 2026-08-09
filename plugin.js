@@ -1,7 +1,7 @@
 window.RochePlugin.register({
   id: "soul-meet-app",
   name: "Soul遇见",
-  version: "1.2.0",
+  version: "1.3.0",
   apps: [
     {
       id: "soul-meet-main",
@@ -59,17 +59,20 @@ window.RochePlugin.register({
           .sm-nav-btn i { font-size: 20px; font-style: normal; }
           .sm-nav-btn.active { color: #ff6b81; font-weight: 600; transform: translateY(-2px); }
           
-          /* 卡片 UI (发现页) - 优化绝美样式 */
-          .sm-card-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
+          /* 卡片 UI (发现页) - 优化绝美样式及滑动相关 */
+          .sm-card-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; overflow: hidden; }
           .sm-card {
             width: 100%; max-width: 330px; aspect-ratio: 3/4.2; background: #fff;
             border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.08);
             display: flex; flex-direction: column; overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; border: 1px solid rgba(255,255,255,0.5);
-            z-index: 2;
+            position: relative; border: 1px solid rgba(255,255,255,0.5);
+            z-index: 2; cursor: grab; transform-origin: 50% 100%;
           }
-          .sm-card-img { flex: 1; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; align-items:center; justify-content:center; font-size: 70px; color:#ddd; }
-          .sm-card-info { padding: 24px 20px; background: linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0)); position: absolute; bottom: 0; width: 100%; }
+          .sm-card.dragging { cursor: grabbing; transition: none; }
+          .sm-card:not(.dragging) { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease; }
+          
+          .sm-card-img { flex: 1; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display:flex; align-items:center; justify-content:center; font-size: 70px; color:#ddd; pointer-events: none;}
+          .sm-card-info { padding: 24px 20px; background: linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0)); position: absolute; bottom: 0; width: 100%; pointer-events: none;}
           .sm-card-name { font-size: 24px; font-weight: 800; margin-bottom: 6px; color: #222; display: flex; justify-content: space-between; align-items: center;}
           .sm-card-match { font-size: 14px; font-weight: 700; color: #ff6b81; background: #fff0f3; padding: 4px 10px; border-radius: 12px; }
           .sm-card-tags { font-size: 13px; color: #a29bfe; margin-bottom: 10px; font-weight:600; display: flex; gap: 6px; flex-wrap: wrap;}
@@ -114,14 +117,15 @@ window.RochePlugin.register({
           .sm-chat-input:focus { border-color: #ffb8b8; background: #fff; }
           .sm-chat-send { background: #ff6b81; color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 18px; box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);}
           
-          /* 其他面板 & 多选世界书 */
+          /* 其他面板、偏好与世界书多选 */
           .sm-panel { padding: 24px; background: #fff; margin: 16px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02);}
           .sm-panel h3 { font-size: 17px; margin-bottom: 16px; color: #222; font-weight: 800; }
           .sm-panel p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 16px; }
           .sm-chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;}
-          .sm-wb-chip { display: inline-block; padding: 8px 14px; border-radius: 20px; border: 1px solid #eee; font-size: 13px; cursor: pointer; transition: all 0.2s; background: #fafafa; color: #666; font-weight: 500;}
-          .sm-wb-chip.selected { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); border-color: transparent; color: #fff; font-weight: 700; box-shadow: 0 4px 10px rgba(161, 140, 209, 0.3);}
-          
+          .sm-chip { display: inline-block; padding: 8px 14px; border-radius: 20px; border: 1px solid #eee; font-size: 13px; cursor: pointer; transition: all 0.2s; background: #fafafa; color: #666; font-weight: 500;}
+          .sm-chip.selected { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); border-color: transparent; color: #fff; font-weight: 700; box-shadow: 0 4px 10px rgba(161, 140, 209, 0.3);}
+          .sm-pref-chip.selected { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); box-shadow: 0 4px 10px rgba(255, 154, 158, 0.3);}
+
           /* 模态弹窗 */
           .sm-modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index:100; display:none; align-items:center; justify-content:center; padding: 20px;}
           .sm-modal-overlay.open { display:flex; }
@@ -137,7 +141,7 @@ window.RochePlugin.register({
         container.appendChild(style);
 
         // ==========================================
-        // 2. 构建 DOM 骨架 (增加背景、美化细节)
+        // 2. 构建 DOM 骨架 (增加偏好选择面板)
         // ==========================================
         const appDOM = document.createElement("div");
         appDOM.className = "sm-app";
@@ -156,18 +160,12 @@ window.RochePlugin.register({
 
           <!-- 发现页 -->
           <div class="sm-view active" id="view-discover">
-            <div class="sm-card-wrap">
-              <div id="sm-deck-container" style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; position:relative;">
-                <div class="sm-empty-state">
-                  <div style="font-size:32px; margin-bottom:12px;">🔮</div>
-                  <div style="color:#888; font-size:14px; margin-bottom: 20px;">跨维度信号连接中...</div>
-                  <span id="sm-loading-tip" style="font-size:12px; color:#aaa;"></span>
-                </div>
-              </div>
-              <div class="sm-actions" id="sm-card-actions" style="display:none;">
-                <button class="sm-act-btn sm-act-pass" id="btn-pass">✖</button>
-                <button class="sm-act-btn sm-act-like" id="btn-like">♥</button>
-              </div>
+            <div class="sm-card-wrap" id="sm-deck-container">
+              <!-- 空状态与卡片将在这里渲染 -->
+            </div>
+            <div class="sm-actions" id="sm-card-actions" style="display:none;">
+              <button class="sm-act-btn sm-act-pass" id="btn-pass">✖</button>
+              <button class="sm-act-btn sm-act-like" id="btn-like">♥</button>
             </div>
           </div>
 
@@ -193,6 +191,15 @@ window.RochePlugin.register({
               <p>你在 Roche 当前活跃的人设，是跨维度匹配的坐标锚点：</p>
               <p style="background:#f8f9fa; padding:14px; border-radius:16px; font-size:13.5px; color:#555; border: 1px solid #eee;" id="sm-my-persona">加载中...</p>
             </div>
+            
+            <div class="sm-panel">
+              <h3>❤️ 交友偏好 (多选)</h3>
+              <p>勾选你更希望遇到哪种特质的人：</p>
+              <div id="sm-pref-list" class="sm-chip-container">
+                <!-- 偏好标签动态生成 -->
+              </div>
+            </div>
+
             <div class="sm-panel">
               <h3>🌍 宇宙设定 (多选)</h3>
               <p>勾选世界书，你会遇到对应背景下活生生的人：</p>
@@ -200,6 +207,7 @@ window.RochePlugin.register({
                  <div style="font-size:13px; color:#aaa;">正在检索世界线...</div>
               </div>
             </div>
+
             <div class="sm-panel" style="box-shadow:none; background:transparent; border:none; padding-top:0;">
               <button class="sm-btn-outline" id="btn-clear-data" style="width:100%; color:#d63031; border-color:#fab1a0; background:#fff;">清空交友记忆</button>
             </div>
@@ -243,7 +251,6 @@ window.RochePlugin.register({
           </div>
         `;
         container.appendChild(appDOM);
-
         // ==========================================
         // 3. 全局状态、多世界书存储与底层 API 封装
         // ==========================================
@@ -255,8 +262,11 @@ window.RochePlugin.register({
           chatHistories: {},
           myPersona: "",
           worldbooks: [],
-          selectedWbIds: [] // 【升级】支持多选世界书ID数组
+          selectedWbIds: [], // 多选世界书ID数组
+          selectedPrefs: []  // 用户在偏好面板选择的标签
         };
+
+        const PREFERENCE_TAGS = ["幽默风趣", "温柔体贴", "高冷傲娇", "反差萌", "事业狂", "艺术家", "病娇", "直球克星", "爹系/妈系", "话痨"];
 
         async function loadStorage() {
           const liked = await roche.storage.get("soul_meet_liked");
@@ -264,14 +274,18 @@ window.RochePlugin.register({
           const chats = await roche.storage.get("soul_meet_chats");
           if (chats) state.chatHistories = chats;
           const settings = await roche.storage.get("soul_meet_settings");
-          if (settings && Array.isArray(settings.selectedWbIds)) {
-            state.selectedWbIds = settings.selectedWbIds;
+          if (settings) {
+            if (Array.isArray(settings.selectedWbIds)) state.selectedWbIds = settings.selectedWbIds;
+            if (Array.isArray(settings.selectedPrefs)) state.selectedPrefs = settings.selectedPrefs;
           }
         }
         async function saveStorage() {
           await roche.storage.set("soul_meet_liked", state.likedList);
           await roche.storage.set("soul_meet_chats", state.chatHistories);
-          await roche.storage.set("soul_meet_settings", { selectedWbIds: state.selectedWbIds });
+          await roche.storage.set("soul_meet_settings", { 
+            selectedWbIds: state.selectedWbIds,
+            selectedPrefs: state.selectedPrefs
+          });
         }
 
         async function askAIToJson(systemPrompt, userPrompt) {
@@ -293,19 +307,41 @@ window.RochePlugin.register({
           }
           return JSON.parse(str);
         }
+
         // ==========================================
-        // 4. 核心业务逻辑 (多世界书加载、鲜活混池卡片、后悔药滑动)
+        // 4. 加载上下文与生成卡片 (增加偏好干预与纯滑动机制)
         // ==========================================
         
-        // 加载 Roche 上下文 (人设与多世界书)
         async function loadRocheContext() {
           try {
             // 1. 获取用户活跃人设
             const p = await roche.persona.getActiveUserPersona();
-            state.myPersona = p || "一个在虚拟世界里漫游、期待奇遇的自由灵魂。";
+            state.myPersona = p || "一个期待在灵魂网络里遇见共鸣的人。";
             document.getElementById('sm-my-persona').textContent = state.myPersona;
 
-            // 2. 获取世界书分类并渲染为多选 Chip
+            // 2. 渲染偏好多选面板
+            const prefListEl = document.getElementById('sm-pref-list');
+            prefListEl.innerHTML = '';
+            PREFERENCE_TAGS.forEach(tag => {
+              const chip = document.createElement('div');
+              chip.className = 'sm-chip sm-pref-chip';
+              if(state.selectedPrefs.includes(tag)) chip.classList.add('selected');
+              chip.textContent = tag;
+              
+              chip.onclick = () => {
+                if(state.selectedPrefs.includes(tag)) {
+                  state.selectedPrefs = state.selectedPrefs.filter(t => t !== tag);
+                  chip.classList.remove('selected');
+                } else {
+                  state.selectedPrefs.push(tag);
+                  chip.classList.add('selected');
+                }
+                saveStorage();
+              };
+              prefListEl.appendChild(chip);
+            });
+
+            // 3. 获取世界书分类并渲染为多选 Chip
             const wbs = await roche.worldbook.list();
             state.worldbooks = wbs || [];
             const wbListEl = document.getElementById('sm-wb-list');
@@ -316,7 +352,7 @@ window.RochePlugin.register({
             } else {
               state.worldbooks.forEach(wb => {
                 const chip = document.createElement('div');
-                chip.className = 'sm-wb-chip';
+                chip.className = 'sm-chip';
                 if(state.selectedWbIds.includes(wb.id)) chip.classList.add('selected');
                 chip.textContent = wb.name;
                 
@@ -334,14 +370,15 @@ window.RochePlugin.register({
               });
             }
           } catch(e) {
-            console.warn("加载 Roche 上下文失败", e);
+            console.warn("加载上下文失败", e);
           }
         }
 
-        // 生成推荐卡片池 (混合已有角色与极具“活人感”的跨维度陌生人)
+        // 生成推荐卡片池 (混合少量已有角色与大量鲜活AI陌生人)
         async function generateCards() {
           const container = document.getElementById('sm-deck-container');
           document.getElementById('sm-card-actions').style.display = 'none';
+          
           container.innerHTML = `
             <div class="sm-empty-state">
               <div style="font-size:32px; margin-bottom:12px;">🔮</div>
@@ -349,13 +386,13 @@ window.RochePlugin.register({
             </div>`;
           
           let newCards = [];
-          state.passedDeck = []; // 每次重新生成时，清空后悔药池
+          state.passedDeck = []; // 清空后悔药池
 
-          // 1. 从主应用抓取少量已有角色 (Char) 作为彩蛋
+          // 1. 从主应用抓取已有角色 (只占极小比例)
           try {
             const chars = await roche.character.list();
             const unlikedChars = chars.filter(c => !state.likedList.some(l => l.id === c.id));
-            const pickedChars = unlikedChars.sort(() => 0.5 - Math.random()).slice(0, 1); // 每次最多混入1个熟人
+            const pickedChars = unlikedChars.sort(() => 0.5 - Math.random()).slice(0, 1);
             for(const c of pickedChars) {
               const fullC = await roche.character.get(c.id);
               newCards.push({
@@ -363,15 +400,15 @@ window.RochePlugin.register({
                 isChar: true,
                 name: c.handle || c.name,
                 avatar: c.avatar || '',
-                bio: fullC.bio || fullC.persona || "这个宇宙里的原住民。",
-                tag: "时空羁绊",
+                bio: fullC.bio || fullC.persona || "主世界原住民。",
+                tag: "剧情熟人",
                 persona: fullC.persona || "",
                 match: Math.floor(Math.random() * 10) + 90
               });
             }
           } catch(e) {}
 
-          // 2. 结合多世界书，生成极其鲜活的 AI 陌生人
+          // 2. 结合多世界书和偏好，批量生成鲜活的 AI 陌生人 (一次生成6~8个)
           try {
             let wbContext = "";
             if (state.selectedWbIds.length > 0) {
@@ -379,19 +416,24 @@ window.RochePlugin.register({
                 const entries = await roche.worldbook.getEntries({ categoryId: wid, scope: "global" });
                 wbContext += entries.map(e => e.content).join("\n") + "\n";
               }
-              wbContext = wbContext.substring(0, 1500); // 截断防止超长
+              wbContext = wbContext.substring(0, 1500); 
             }
 
-            const sysPrompt = `你是跨维度交友匹配系统。请生成 3 个截然不同的、极具"活人感"的陌生人交友卡片。
+            let prefContext = state.selectedPrefs.length > 0 
+              ? `请重点生成带有以下特征的人：【${state.selectedPrefs.join("、")}】。` 
+              : "生成随机不同类型的有趣人物。";
+
+            const sysPrompt = `你是跨维度交友匹配系统。请一次性生成 6 到 8 个截然不同、极具"活人感"的交友卡片。
 要求：
-1. 身份极端多样：比如当红流量明星、疲惫的互联网社畜、微服私访的皇帝、跨界魔法师、腹黑霸总、或者是普通但有趣的大学生。
-2. "活人感"：bio(交友宣言)必须像真人在用交友软件，可以带点情绪、吐槽、甚至小傲娇，绝对不能像AI客服。
-3. 输出严格的 JSON 格式：{"cards":[{"id":"唯一小写短id","name":"名字/网名","bio":"极具个性的活人感交友宣言","tag":"四字以内的特征标签(如:糊弄学大师)","match":随机80到98,"persona":"隐藏详细设定，包含极具个性的说话风格与背景，用于后续对话，约80字"}]}。
+1. 身份极端多样：现代都市社畜、高冷学霸、微服私访的皇帝、落魄明星、跨界魔法师、腹黑霸总、或者是普通但有趣的网游大神等，不要局限于提示词！只要是人类即可！
+2. "活人感"：bio(交友宣言)必须像真人在用交友软件，可以带点情绪、吐槽、甚至小傲娇，不要客气，不要像AI客服。
+3. ${prefContext}
+4. 输出严格的 JSON 格式：{"cards":[{"id":"唯一小写短id","name":"名字/网名","bio":"极具个性的活人感交友宣言","tag":"四字以内的特征标签(如:糊弄学大师)","match":随机70到99,"persona":"隐藏详细设定，包含极具个性的说话风格与背景，用于后续对话，约80字"}]}。
 不要输出任何 Markdown 外壳，只输出纯 JSON。`;
             
             let usrPrompt = `我的灵魂底色：\n${state.myPersona}\n`;
-            if (wbContext) usrPrompt += `本次匹配允许穿越的世界观规则：\n${wbContext}\n`;
-            usrPrompt += `请生成 3 个活生生的、甚至可能有点缺点的多元宇宙人类，能和我产生有趣的化学反应。`;
+            if (wbContext) usrPrompt += `允许穿越的世界观规则（小概率触发跨世界）：\n${wbContext}\n`;
+            usrPrompt += `请生成 6 到 8 个活生生的、甚至可能有缺点的人类。`;
 
             const aiRes = await askAIToJson(sysPrompt, usrPrompt);
             if (aiRes && Array.isArray(aiRes.cards)) {
@@ -413,12 +455,11 @@ window.RochePlugin.register({
             roche.ui.toast("宇宙频段波动，仅捕捉到微弱信号");
           }
 
-          // 打乱混池并渲染
           state.deckPool = newCards.sort(() => 0.5 - Math.random());
           renderNextCard();
         }
 
-        // 渲染单张滑动卡片
+        // 渲染单张卡片及手势滑动挂载
         function renderNextCard() {
           const container = document.getElementById('sm-deck-container');
           const actions = document.getElementById('sm-card-actions');
@@ -428,13 +469,13 @@ window.RochePlugin.register({
             let html = `
               <div class="sm-empty-state">
                 <div style="font-size:32px; margin-bottom:12px;">🌟</div>
-                <div style="color:#888; font-size:14px; margin-bottom: 24px;">这一批信号已经看完了</div>`;
+                <div style="color:#888; font-size:14px; margin-bottom: 24px;">这一批卡片已经看完了</div>`;
             
             // 如果有错过的卡片，显示后悔药按钮
             if (state.passedDeck.length > 0) {
-              html += `<button class="sm-btn-outline" id="btn-rewind" style="margin-bottom:16px; width:100%;">🔙 重新查看刚才错过的 Ta</button>`;
+              html += `<button class="sm-btn-outline" id="btn-rewind" style="margin-bottom:16px; width:100%;">🔙 重新查看错过的 Ta</button>`;
             }
-            html += `<button class="sm-btn-primary" id="btn-fetch-more" style="width:100%;">🚀 跨维度继续寻找</button></div>`;
+            html += `<button class="sm-btn-primary" id="btn-fetch-more" style="width:100%;">🚀 重新感应新批次</button></div>`;
             
             container.innerHTML = html;
             
@@ -453,8 +494,8 @@ window.RochePlugin.register({
           const card = state.deckPool[0];
           state.currentCard = card;
           const typeBadge = card.isChar 
-            ? '<div class="sm-card-type" style="background: rgba(255,107,129,0.85);">剧情原住民</div>' 
-            : '<div class="sm-card-type">跨界旅人</div>';
+            ? '<div class="sm-card-type" style="background: rgba(255,107,129,0.85);">原住民</div>' 
+            : '<div class="sm-card-type">新朋友</div>';
           
           container.innerHTML = `
             <div class="sm-card" id="sm-active-card">
@@ -467,17 +508,83 @@ window.RochePlugin.register({
               </div>
             </div>
           `;
+
+          // 重新绑定手势滑动
+          bindCardSwipe(document.getElementById('sm-active-card'));
         }
 
-        // 处理滑动操作 (左滑加入后悔药池)
-        function handleSwipe(isLike) {
+        // ==========================================
+        // 手势滑动逻辑 (完美还原探探/Tinder滑动感)
+        // ==========================================
+        function bindCardSwipe(el) {
+          if (!el) return;
+          el.style.touchAction = 'none';
+          let startX = 0, startY = 0, isDragging = false;
+
+          const onMove = (e) => {
+            if (!isDragging) return;
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            const deltaX = x - startX;
+            const deltaY = y - startY;
+            const rotate = deltaX * 0.05; // 随位移旋转
+            
+            el.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotate}deg)`;
+            
+            // 可以通过透明度等特效暗示喜欢/不喜欢，这里简单缩放
+          };
+
+          const onEnd = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            el.classList.remove('dragging');
+            
+            const x = e.clientX || (e.changedTouches && e.changedTouches[0].clientX) || startX;
+            const deltaX = x - startX;
+            
+            const threshold = window.innerWidth * 0.25;
+            
+            if (deltaX > threshold) {
+              handleSwipeAction(true); // 右滑 喜欢
+            } else if (deltaX < -threshold) {
+              handleSwipeAction(false); // 左滑 Pass
+            } else {
+              // 没滑到阈值，回弹
+              el.style.transform = `translate(0px, 0px) rotate(0deg)`;
+            }
+            
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchend', onEnd);
+          };
+
+          const onStart = (e) => {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+            startX = e.clientX || (e.touches && e.touches[0].clientX);
+            startY = e.clientY || (e.touches && e.touches[0].clientY);
+            isDragging = true;
+            el.classList.add('dragging');
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchend', onEnd);
+          };
+
+          el.addEventListener('mousedown', onStart);
+          el.addEventListener('touchstart', onStart, { passive: false });
+        }
+
+        // 处理卡片滑出动作与状态结算
+        function handleSwipeAction(isLike) {
           if (!state.currentCard) return;
           const card = state.deckPool.shift();
           const cardEl = document.getElementById('sm-active-card');
           
           if (cardEl) {
-            // 滑动飞出动画
-            cardEl.style.transform = isLike ? 'translate(120%, -20%) rotate(15deg)' : 'translate(-120%, 20%) rotate(-15deg)';
+            cardEl.style.transition = 'transform 0.3s ease-out, opacity 0.3s';
+            cardEl.style.transform = isLike ? 'translate(150%, 20%) rotate(25deg)' : 'translate(-150%, 20%) rotate(-25deg)';
             cardEl.style.opacity = '0';
           }
 
@@ -487,22 +594,26 @@ window.RochePlugin.register({
               state.likedList.unshift(card);
               saveStorage();
               renderInbox();
-              roche.ui.toast(`成功与 ${card.name} 建立羁绊！`);
+              roche.ui.toast(`成功与 ${card.name} 建立联系！`);
             }
           } else {
             // 不喜欢，加入后悔药池
             state.passedDeck.push(card);
           }
 
+          // 短暂延迟后渲染下一张
           setTimeout(() => {
             renderNextCard();
           }, 300);
         }
+        // ==========================================
+        // 5. 运势测算与聊天室 (极强活人感 AI 对话)
+        // ==========================================
 
         // 获取并测算今日运势
         async function fetchDailyFortune() {
           const el = document.getElementById('sm-daily-text');
-          el.textContent = "星盘旋转中，AI 正在测算...";
+          el.innerHTML = '<span style="color:#aaa;">星盘旋转中，正在感应多维数据流...</span>';
           try {
             const res = await roche.ai.chat({
               messages: [
@@ -513,14 +624,11 @@ window.RochePlugin.register({
             });
             el.innerHTML = res.text.replace(/\n/g, '<br>');
           } catch(e) {
-            el.textContent = "星象磁场受到干扰，今日宜顺其自然，跟随直觉去匹配。";
+            el.innerHTML = '<span style="color:#d63031;">星象磁场受到干扰，今日宜顺其自然，跟随直觉去匹配。</span>';
           }
         }
 
-        // ==========================================
-        // 5. 聊天室、活人感AI对话、记忆沉淀与人设提取
-        // ==========================================
-
+        // 渲染消息列表
         function renderInbox() {
           const list = document.getElementById('sm-inbox-list');
           list.innerHTML = "";
@@ -532,12 +640,12 @@ window.RochePlugin.register({
             const item = document.createElement('div');
             item.className = 'sm-list-item';
             const hist = state.chatHistories[u.id] || [];
-            const lastMsg = hist.length > 0 ? hist[hist.length-1].content : "刚刚匹配成功，发个消息吧~";
+            const lastMsg = hist.length > 0 ? hist[hist.length-1].content : "刚刚建立了联系，发个消息吧~";
             
             item.innerHTML = `
               <div class="sm-list-av">${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : u.name.substring(0,1)}</div>
               <div class="sm-list-mid">
-                <div class="sm-list-name">${u.name} <span class="sm-list-tag">${u.isChar ? '熟人' : '新朋友'}</span></div>
+                <div class="sm-list-name">${u.name} <span class="sm-list-tag">${u.isChar ? '原住民' : '新朋友'}</span></div>
                 <div class="sm-list-sub">${lastMsg}</div>
               </div>
             `;
@@ -570,7 +678,7 @@ window.RochePlugin.register({
           const hist = state.chatHistories[currentPeer.id] || [];
           
           if (hist.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#ccc; font-size:12px; margin-top:20px;">—— 你们在 Soul Meet 的初次相遇 ——</div>`;
+            container.innerHTML = `<div style="text-align:center; color:#ccc; font-size:12px; margin-top:20px;">—— 你们在 Soul Meet 的初次对话 ——</div>`;
           }
 
           hist.forEach(msg => {
@@ -614,7 +722,7 @@ window.RochePlugin.register({
                 const entries = await roche.worldbook.getEntries({ categoryId: wid, scope: "global" });
                 wbContext += entries.map(e => e.content).join("\n") + "\n";
               }
-              sysPrompt += `\n【当前所处宇宙的常识法则】\n${wbContext.substring(0, 800)}\n请在聊天时自然体现你活在这个世界里，不要像在做设定的科普。`;
+              sysPrompt += `\n【当前所处宇宙的常识法则】\n${wbContext.substring(0, 800)}\n请在聊天时自然体现你活在这个世界里，但绝对不要像在做科普，你只是个活在这个世界里的普通人。`;
             }
             
             // 联通已有角色的记忆
@@ -635,9 +743,9 @@ window.RochePlugin.register({
 
             sysPrompt += `\n【最高指令：活人感规范】
 1. 你是一个有喜怒哀乐的【真实人类/角色】，不是AI，不是客服！必须完全沉浸。
-2. 说话口语化，像发微信/打字一样，可以使用少量的网络用语、甚至标点符号不规范。
+2. 说话口语化，像发微信/打字一样，可以使用少量的网络用语，甚至可以敷衍、吐槽、装高冷，完全遵循你的人设脾气！
 3. 绝对禁止使用括号或星号进行动作和神态描写（如：*笑*、(喝口茶)、[挑眉]）。只能输出纯对话文本。
-4. 每条回复限制在 40 字以内。不要急于推动剧情，可以反问，可以吐槽，可以装高冷，完全遵循你的人设脾气！`;
+4. 每次回复限制在 40 字以内。不要急于推动剧情，像真人一样一句一句聊。`;
 
             const apiMsgs = [{ role: 'system', content: sysPrompt }];
             const hist = state.chatHistories[currentPeer.id];
@@ -646,7 +754,7 @@ window.RochePlugin.register({
               apiMsgs.push({ role: m.role, content: m.content });
             });
 
-            const res = await roche.ai.chat({ messages: apiMsgs, temperature: 0.9 });
+            const res = await roche.ai.chat({ messages: apiMsgs, temperature: 0.95 });
             const replyText = res.text.trim().replace(/[\(\[\*].*?[\)\]\*]/g, ''); // 兜底剔除动作描写
 
             state.chatHistories[currentPeer.id].push({ role: 'assistant', content: replyText });
@@ -710,7 +818,7 @@ window.RochePlugin.register({
 
           const confirmed = await roche.ui.confirm({
             title: "印刻至主世界记忆库",
-            message: "将让 AI 提取你们在 Soul Meet 的聊天要点，并作为「事实记忆」永久写入 Roche 主记忆库。这会影响主应用中与该角色的关系，确定吗？"
+            message: "将让 AI 提取你们在 Soul Meet 的聊天要点，并作为「事实记忆」永久写入 Roche 主记忆库。确定吗？"
           });
           if (!confirmed) return;
 
@@ -741,7 +849,7 @@ window.RochePlugin.register({
               summaryText: fact,
               who: ["用户", currentPeer.name],
               action: fact,
-              when: "在 Soul 遇见",
+              when: "在 Soul Meet",
               where: "多维交友空间",
               source: "plugin"
             });
@@ -774,9 +882,9 @@ window.RochePlugin.register({
             });
           });
 
-          // 发现页按键交互
-          document.getElementById('btn-pass').addEventListener('click', () => handleSwipe(false));
-          document.getElementById('btn-like').addEventListener('click', () => handleSwipe(true));
+          // 发现页按钮 (防止手势不好操作时的点击备用)
+          document.getElementById('btn-pass')?.addEventListener('click', () => handleSwipeAction(false));
+          document.getElementById('btn-like')?.addEventListener('click', () => handleSwipeAction(true));
 
           // 运势刷新
           document.getElementById('btn-refresh-daily').addEventListener('click', fetchDailyFortune);
@@ -795,7 +903,7 @@ window.RochePlugin.register({
             document.getElementById('modal-persona').classList.remove('open');
           });
 
-          // 清空缓存 (核弹按钮)
+          // 清空缓存
           document.getElementById('btn-clear-data').addEventListener('click', async () => {
             const ok = await roche.ui.confirm({ title: "危险操作", message: "将清空所有匹配列表与聊天记录，且不可恢复，是否继续？" });
             if (ok) {
@@ -817,10 +925,8 @@ window.RochePlugin.register({
           renderInbox();
           fetchDailyFortune();
 
-          // 延迟拉取卡片，确保世界书等信息加载完毕
-          setTimeout(() => {
-            generateCards();
-          }, 300);
+          // 用户要求不自动生成，因此直接渲染空状态，让用户手动点击“感应”
+          renderNextCard(); 
         }
 
         bootApp();
