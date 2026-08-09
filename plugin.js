@@ -276,7 +276,7 @@ window.RochePlugin.register({
           <!-- 运势页 -->
           <div class="sm-view" id="view-daily">
             <div class="sm-panel" style="background: linear-gradient(135deg, #fff 0%, #fff0f3 100%);">
-              <h3>✨ 跨时空交友运势</h3>
+              <h3>✨ 今日运势</h3>
               <p id="sm-daily-text" style="color:#444; font-size:14.5px;">正在感应星象...</p>
               <button class="sm-btn-primary" id="btn-refresh-daily" style="width:100%; margin-top:10px;">重新感应</button>
             </div>
@@ -285,8 +285,8 @@ window.RochePlugin.register({
           <!-- 我的页 -->
           <div class="sm-view" id="view-me">
             <div class="sm-panel">
-              <h3>👤 灵魂底色</h3>
-              <p>你在 Roche 当前活跃的人设，是跨维度匹配的坐标锚点：</p>
+              <h3>👤 我的档案</h3>
+              <p>你在 Roche 当前活跃的人设，是匹配的坐标锚点：</p>
               <p style="background:#f8f9fa; padding:14px; border-radius:16px; font-size:13.5px; color:#555; border: 1px solid #eee;" id="sm-my-persona">加载中...</p>
             </div>
             
@@ -359,7 +359,7 @@ window.RochePlugin.register({
              <div class="sm-rp-header">
                 <button class="sm-rp-close" id="btn-rp-exit">◂ 逃离现实</button>
                 <div class="sm-rp-status">
-                   <div class="sm-rp-status-item">坐标<span class="sm-rp-val" id="rp-stat-loc">未知</span></div>
+                   <div class="sm-rp-status-item">地点<span class="sm-rp-val" id="rp-stat-loc">未知</span></div>
                    <div class="sm-rp-status-item">状态<span class="sm-rp-val" id="rp-stat-mood">平静</span></div>
                    <div class="sm-rp-status-item">本能<span class="sm-rp-val" id="rp-stat-desire">0%</span></div>
                 </div>
@@ -1072,7 +1072,7 @@ window.RochePlugin.register({
             document.getElementById('sm-rp-room').classList.add('open');
             
             if(!state.rpHistories[rpPeer.id] || state.rpHistories[rpPeer.id].length === 0) {
-               state.rpHistories[rpPeer.id] = [{ role: 'system', content: `【系统介入】你与 ${rpPeer.name} 奔现了。初次见面，剧情将顺其自然发展...` }];
+               state.rpHistories[rpPeer.id] = [{ role: 'system', content: `你与 ${rpPeer.name} 奔现了...` }];
                triggerRPAi(); 
             } else {
                renderRPHistory();
@@ -1133,7 +1133,7 @@ window.RochePlugin.register({
             isRpTyping = true;
             const container = document.getElementById('rp-history');
             const typingEl = document.createElement('div'); typingEl.className = 'sm-rp-block ai';
-            typingEl.innerHTML = `<span style="opacity:0.5;">现实演算中...</span>`;
+            typingEl.innerHTML = `<span style="opacity:0.5;">命运编织中...</span>`;
             container.appendChild(typingEl); container.scrollTop = container.scrollHeight;
 
             try {
@@ -1239,7 +1239,9 @@ window.RochePlugin.register({
           if (hist.length < 3) return roche.ui.toast("聊得太少了，多聊几句吧！");
           roche.ui.toast("AI 正在撰写灵魂档案...");
           const textLog = hist.map(m => (m.role==='user'?'我':'Ta') + ': ' + (m.content||m.type)).join('\n');
-          const sys = `你是一位顶级的小说角色设定师。请结合该角色的基础设定和下方的聊天记录，撰写一份详尽的、适合直接复制给大模型当人设 prompt 的档案。包括：姓名、外貌气质、性格剖析、核心说话口癖、神秘过往、以及对"我"的特殊态度。直接输出高质量档案文本。`;
+          const sys = `你是一位顶级的小说角色设定师。请结合该角色的基础设定和下方的聊天记录，撰写一份详尽的、适合直接复制给大模型当人设 prompt 的档案。包括：姓名、外貌气质、性格剖析、核心说话口癖、神秘过往、以及对"我"的特殊态度。
+【严重警告】：请直接输出格式化的人设档案纯文本！绝对不要说“好的”、“这是为您生成的档案”等任何前言后语和客套话！`;
+
           let usr = `【基础设定】\n${currentPeer.persona}\n\n【实际表现】\n${textLog}`;
           try {
             const res = await roche.ai.chat({ messages: [{ role: "system", content: sys }, { role: "user", content: usr }], temperature: 0.7 });
@@ -1280,17 +1282,31 @@ window.RochePlugin.register({
           });
           
           // 模式切换
+          // 模式切换 (改为手动生成)
           document.querySelectorAll('.sm-mode-btn').forEach(btn => {
               btn.addEventListener('click', () => {
+                  if (state.discoverMode === btn.dataset.mode) return; // 避免重复点击同一个
                   document.querySelectorAll('.sm-mode-btn').forEach(b => b.classList.remove('active'));
                   btn.classList.add('active');
                   state.discoverMode = btn.dataset.mode;
-                  roche.ui.toast(state.discoverMode === 'r18' ? "已开启狂野模式 😈" : "已切换为纯爱模式 🌸");
-                  if (document.getElementById('view-discover').classList.contains('active')) generateCards();
+                  roche.ui.toast(state.discoverMode === 'r18' ? "已开启狂野模式 😈 (请重新感应)" : "已切换为纯爱模式 🌸 (请重新感应)");
+                  
+                  // 清空当前屏幕上的卡片，弹出“寻觅”的按钮让用户自己点
+                  if (document.getElementById('view-discover').classList.contains('active')) {
+                      state.deckPool = [];
+                      renderNextCard(); 
+                  }
               });
           });
 
           document.getElementById('btn-chat-back').addEventListener('click', closeChat);
+          // 发现页：底部 ✖ (Pass) 和 ♥ (Like) 按钮的点击事件
+          document.getElementById('btn-pass').addEventListener('click', () => {
+              if (document.getElementById('sm-active-card')) handleSwipeAction(false);
+          });
+          document.getElementById('btn-like').addEventListener('click', () => {
+              if (document.getElementById('sm-active-card')) handleSwipeAction(true);
+          });
           
           // 聊天输入与发送 (回车不发送，点击按钮发送)
           document.getElementById('chat-input').addEventListener('keydown', (e) => {
@@ -1364,7 +1380,13 @@ window.RochePlugin.register({
 
           document.getElementById('btn-chat-persona').addEventListener('click', extractPersona);
           document.getElementById('btn-chat-memory').addEventListener('click', depositMemory);
-          document.getElementById('btn-close-modal').addEventListener('click', () => { document.getElementById('modal-persona').classList.remove('open'); });
+                    // 修复弹窗关闭逻辑，点击按钮或背景都可以关闭
+          const closePersonaModal = () => document.getElementById('modal-persona').classList.remove('open');
+          document.getElementById('btn-close-modal').addEventListener('click', closePersonaModal);
+          document.getElementById('modal-persona').addEventListener('click', (e) => {
+              if (e.target.id === 'modal-persona') closePersonaModal();
+          });
+
 
           document.getElementById('btn-clear-data').addEventListener('click', async () => {
             const ok = await roche.ui.confirm({ title: "危险操作", message: "将清空所有匹配列表与聊天记录，且不可恢复，是否继续？" });
