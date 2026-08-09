@@ -826,22 +826,31 @@ window.RochePlugin.register({
           container.scrollTop = container.scrollHeight;
         }
 
-        // ====== 核心：发送与多气泡接收引擎 ======
-        function sendUserMessage() {
+                // ====== 核心：发送与多气泡接收引擎 ======
+        function sendUserMessage(triggerAi = true) {
           if (!currentPeer || state.isAiTyping) return;
           const input = document.getElementById('chat-input');
           const text = input.value.trim();
-          if (!text) return;
+          
+          // 1. 如果输入框有文字，先把用户的气泡发出去
+          if (text) {
+              if (!state.chatHistories[currentPeer.id]) state.chatHistories[currentPeer.id] = [];
+              const newMsg = { role: 'user', content: text };
+              if (state.chatQuoteData) { newMsg.quote = state.chatQuoteData; state.chatQuoteData = null; updateQuotePreviewUI(); }
 
-          if (!state.chatHistories[currentPeer.id]) state.chatHistories[currentPeer.id] = [];
-          const newMsg = { role: 'user', content: text };
-          if (state.chatQuoteData) { newMsg.quote = state.chatQuoteData; state.chatQuoteData = null; updateQuotePreviewUI(); }
+              state.chatHistories[currentPeer.id].push(newMsg);
+              saveStorage(); 
+              input.value = "";
+              renderChatHistory(); 
+              renderInbox();
+          }
 
-          state.chatHistories[currentPeer.id].push(newMsg);
-          saveStorage(); input.value = "";
-          renderChatHistory(); renderInbox();
-          triggerAiReply(); // 直接触发，无需回复按钮
+          // 2. 根据参数决定是否让 AI 开始回复
+          if (triggerAi) {
+              triggerAiReply(); 
+          }
         }
+
 
         function sendSpecialMsg(type, contentObj) {
             if (!currentPeer || state.isAiTyping) return;
@@ -1126,8 +1135,20 @@ window.RochePlugin.register({
 
           document.getElementById('btn-chat-back').addEventListener('click', closeChat);
           
-          // 输入逻辑：回车换行，只有点击右侧按钮才发送
-          document.getElementById('chat-send').addEventListener('click', sendUserMessage);
+// 输入逻辑：
+          // 1. 回车键：把消息气泡发出去，但【不】触发AI回复 (传参 false)
+          document.getElementById('chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { 
+              e.preventDefault(); // 阻止默认的回车换行
+              sendUserMessage(false); 
+            }
+          });
+
+          // 2. 点击右侧小飞机按钮：如果有文字先发文字，然后【触发】AI开始回复 (传参 true)
+          // 哪怕输入框是空的，只要点这个按钮，AI也会对你之前屯的消息进行回复
+          document.getElementById('chat-send').addEventListener('click', () => {
+             sendUserMessage(true);
+          });
           
           document.getElementById('btn-chat-settings').addEventListener('click', () => {
               if(!currentPeer) return;
