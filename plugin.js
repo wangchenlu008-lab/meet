@@ -1,7 +1,7 @@
 window.RochePlugin.register({
   id: "soul-meet-app",
   name: "Soul遇见",
-  version: "3.0.0",
+  version: "3.2.0",
   apps: [
     {
       id: "soul-meet-main",
@@ -11,7 +11,7 @@ window.RochePlugin.register({
         container.classList.add("soul-meet-container");
         
         // ==========================================
-        // 1. 注入 CSS
+        // 1. 注入 CSS (所有新UI及占位图剔除)
         // ==========================================
         const style = document.createElement("style");
         style.id = "soul-meet-styles";
@@ -67,12 +67,10 @@ window.RochePlugin.register({
           .sm-chip.selected { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: #fff; border-color: transparent; font-weight: 700;}
           .sm-pref-chip.selected { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; border-color: transparent;}
           .sm-custom-input-wrap { display: flex; gap: 8px; margin-top: 8px; width: 100%;}
-          .sm-custom-input { flex: 1; padding: 10px 12px; border-radius: 14px; border: 1px solid #ddd; font-size: 14px; outline: none; background: #fafafa; transition: 0.2s; }
+          .sm-custom-input { flex: 1; padding: 10px 12px; border-radius: 14px; border: 1px solid #ddd; font-size: 14px; outline: none; background: #fafafa; transition: 0.2s; font-family:inherit;}
           .sm-custom-input:focus { border-color: #ff9a9e; background: #fff; }
           
-          /* ==================================================== */
           /* 广场动态样式 */
-          /* ==================================================== */
           .sm-square-feed { flex:1; overflow-y:auto; padding:0; display:flex; flex-direction:column; background:#f4f5f7; }
           .sm-post { background:#fff; margin-bottom:10px; padding:16px; display:flex; flex-direction:column; gap:10px; position:relative; }
           .sm-post-header { display:flex; align-items:center; gap:12px; }
@@ -83,16 +81,22 @@ window.RochePlugin.register({
           .sm-post-more { margin-left:auto; cursor:pointer; color:#999; font-weight:bold; font-size:18px; padding:4px 8px; border-radius:50%; transition:0.2s;}
           .sm-post-more:active { background:#f0f0f0; color:#333; }
           .sm-post-text { font-size:14.5px; color:#333; line-height:1.6; word-wrap:break-word; }
-          .sm-post-img-wrap { width:100%; max-height:220px; overflow:hidden; border-radius:12px; margin-top:6px; display:flex; align-items:center; justify-content:center; background:#eee; position:relative; }
-          .sm-post-img-text { position:absolute; font-size:13px; color:#555; background:rgba(255,255,255,0.8); padding:6px 12px; border-radius:12px; backdrop-filter:blur(4px); }
+          
+          /* 去除了占位底图的新图片框样式 */
+          .sm-post-img-wrap { width:100%; min-height:80px; border-radius:12px; margin-top:6px; display:flex; align-items:center; justify-content:center; background:#fcfcfc; border: 1px dashed #ccc; box-sizing:border-box; padding:16px; }
+          .sm-post-img-text { font-size:13px; color:#888; text-align:center; }
+          
           .sm-post-actions { display:flex; gap:20px; border-top:1px solid #f0f0f0; padding-top:12px; margin-top:4px; }
           .sm-post-act-btn { display:flex; align-items:center; gap:6px; color:#777; font-size:13px; cursor:pointer; background:none; border:none; padding:0; }
           .sm-post-act-btn.liked { color:#ff6b81; font-weight:bold; }
+          
           .sm-comments { background:#f9f9f9; border-radius:12px; padding:10px; margin-top:8px; display:flex; flex-direction:column; gap:8px; }
-          .sm-comment-item { font-size:13px; line-height:1.5; color:#444; position:relative; display:flex; gap:4px; align-items:flex-start;}
+          .sm-comment-item { font-size:13px; line-height:1.5; color:#444; position:relative; display:flex; gap:6px; align-items:flex-start;}
           .sm-comment-name { font-weight:700; color:#6c5ce7; cursor:pointer; flex-shrink:0;}
           .sm-comment-text { flex:1; word-wrap:break-word;}
-          .sm-comment-del { color:#ff9a9e; font-size:11px; margin-left:8px; cursor:pointer; display:none; flex-shrink:0;}
+          .sm-comment-action { cursor:pointer; font-size:11px; color:#888; transition:0.2s; white-space:nowrap;}
+          .sm-comment-action:hover { color:#555; }
+          .sm-comment-del { color:#ff9a9e; font-size:11px; cursor:pointer; display:none; flex-shrink:0;}
           .sm-comment-item:hover .sm-comment-del { display:inline; }
           .sm-refresh-square { background:linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color:#fff; border:none; padding:12px; margin:16px; border-radius:20px; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(255,154,158,0.3); transition:0.2s; text-align:center;}
           .sm-refresh-square:active { transform:scale(0.95); }
@@ -142,6 +146,7 @@ window.RochePlugin.register({
 
           .sm-quote-box { background: rgba(0,0,0,0.05); padding: 6px 10px; border-radius: 8px; font-size: 12px; margin-bottom: 6px; color: inherit; opacity: 0.8; border-left: 3px solid rgba(0,0,0,0.1); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
           
+          /* 特殊模拟卡片（透明外壳） */
           .sm-msg.is-transparent { padding: 0 !important; background: transparent !important; box-shadow: none !important; border: none !important; border-radius:0 !important; }
           .sm-transfer-card { width: 190px; border-radius: 14px; padding: 14px; color: #3a7bb4; position: relative; overflow: hidden; pointer-events: none;}
           .sm-msg.me .sm-transfer-card { background: radial-gradient(circle at top left, #e2f0ff, #b0d2f7); }
@@ -151,16 +156,19 @@ window.RochePlugin.register({
           .sm-transfer-note { font-size: 11px; opacity: 0.9; border-top: 1px solid rgba(26, 56, 82, 0.15); padding-top: 6px; }
           .sm-voice-message { display: flex; align-items: center; padding: 10px 14px; min-width: 100px; max-width: 220px; gap: 8px; font-size: 14.5px; border-radius: 20px; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); color: #333; border: 1px solid rgba(255,255,255,0.4); pointer-events: none;}
           .sm-msg.me .sm-voice-message { flex-direction: row-reverse; background: rgba(254, 207, 239, 0.8); }
-          .sm-ai-image-wrap { display: flex; flex-direction: column; align-items: center; pointer-events: none;}
-          .sm-ai-image { max-width: 200px; border-radius: 14px; display: block; border: 2px solid rgba(255,255,255,0.7); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-          .sm-ai-image-desc { font-size: 12px; color: #555; margin-top: 8px; text-align: center; background: rgba(255,255,255,0.6); padding: 4px 10px; border-radius: 10px; backdrop-filter: blur(4px); max-width: 180px; word-break: break-all;}
+          
+          /* 聊天室内的图片，同步去底图 */
+          .sm-ai-image-wrap { width:100%; border-radius:12px; margin-top:4px; display:flex; align-items:center; justify-content:center; background:#fdfdfd; border: 1px dashed #ccc; box-sizing:border-box; padding:12px; pointer-events:none;}
+          .sm-ai-image-desc { font-size: 13px; color: #888; text-align: center; }
 
+          /* 打字中动画 */
           .sm-typing-bubble { display: flex; align-items: center; gap: 6px; padding: 14px 18px; border-radius: 25px; background: rgba(255,255,255,0.8); width: fit-content; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom-left-radius: 4px;}
           .sm-typing-dot { width: 6px; height: 6px; background: #ff9a9e; border-radius: 50%; animation: sm-bounce 1.4s infinite ease-in-out both; }
           .sm-typing-dot:nth-child(1) { animation-delay: -0.32s; }
           .sm-typing-dot:nth-child(2) { animation-delay: -0.16s; }
           @keyframes sm-bounce { 0%, 80%, 100% { transform: scale(0.5); opacity: 0.4;} 40% { transform: scale(1.1); opacity: 1; } }
 
+          /* 聊天输入框区域 */
           .sm-chat-input-area { padding: 10px 16px; background: rgba(255,255,255,0.85); backdrop-filter:blur(10px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 8px; padding-bottom:calc(10px + env(safe-area-inset-bottom, 0px)); z-index:10;}
           .sm-chat-actions-top { display: flex; gap: 10px; align-items: center; padding-bottom: 2px; }
           .sm-action-icon-btn { font-size: 16px; width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #555; border: 1px solid #eee; cursor: pointer; display:flex; justify-content:center; align-items:center; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);}
@@ -255,7 +263,7 @@ window.RochePlugin.register({
         container.appendChild(style);
 
         // ==========================================
-        // 2. 构建 DOM 骨架 (已彻底清理重复结构)
+        // 2. 构建 DOM 骨架
         // ==========================================
         const appDOM = document.createElement("div");
         appDOM.className = "sm-app";
@@ -301,17 +309,17 @@ window.RochePlugin.register({
             <div id="sm-inbox-list" style="flex:1; overflow-y:auto; padding-top: 8px;"></div>
           </div>
 
-          <!-- =================== 4. 我的页 (包含伪装人设) =================== -->
+          <!-- =================== 4. 我的页 (包含伪装人设及专属设定) =================== -->
           <div class="sm-view" id="view-me">
             <div class="sm-panel">
               <h3>👤 我的档案</h3>
               <p style="font-size:12px; color:#888; margin-bottom:8px;">原系统底色：<span id="sm-sys-persona"></span></p>
               
               <label style="font-size:13px; font-weight:600; color:#444;">🎭 社交伪装人设 (在此软件内表现的身份)</label>
-              <div class="sm-custom-input-wrap" style="margin-top:8px;">
+              <div class="sm-custom-input-wrap" style="margin-top:8px; flex-direction:column;">
                 <textarea id="sm-fake-persona-input" class="sm-custom-input" rows="3" placeholder="例如：表面是个高冷学霸，其实是个沙雕段子手...（留空则使用原系统底色）"></textarea>
+                <button class="sm-btn-primary" id="btn-save-fake-persona" style="width:100%; padding:10px;">保存伪装身份</button>
               </div>
-              <button class="sm-btn-primary" id="btn-save-fake-persona" style="width:100%; margin-top:10px; padding:10px;">保存伪装身份</button>
             </div>
             
             <div class="sm-panel">
@@ -325,13 +333,22 @@ window.RochePlugin.register({
             </div>
 
             <div class="sm-panel">
-              <h3>🌍 宇宙设定 (多选)</h3>
-              <p>挂载世界书，你可能会遇到该世界观下的各种人：</p>
-              <div id="sm-wb-list" class="sm-chip-container"><div style="font-size:13px; color:#aaa;">检索世界线...</div></div>
+              <h3>🌍 宇宙设定挂载</h3>
+              <p>挂载主系统世界书：</p>
+              <div id="sm-wb-list" class="sm-chip-container" style="margin-bottom:16px;"><div style="font-size:13px; color:#aaa;">检索世界线...</div></div>
+              
+              <h4 style="font-size:14px; margin: 10px 0;">📖 本地专属设定 (多选)</h4>
+              <p style="font-size:12px; color:#888;">在此编写并挂载只属于这个插件的自定义世界/背景设定：</p>
+              <div id="sm-local-wb-list" class="sm-chip-container"></div>
+              <div class="sm-custom-input-wrap" style="flex-direction:column; margin-top:8px;">
+                <input type="text" id="sm-local-wb-name" class="sm-custom-input" placeholder="设定名称 (如: 赛博修仙A区)">
+                <textarea id="sm-local-wb-content" class="sm-custom-input" rows="2" placeholder="具体世界观或规则设定..."></textarea>
+                <button class="sm-btn-outline" id="btn-add-local-wb" style="margin-top:4px;">保存新设定</button>
+              </div>
             </div>
 
             <div class="sm-panel" style="box-shadow:none; background:transparent; border:none; padding-top:0;">
-              <button class="sm-btn-outline" id="btn-clear-data" style="width:100%; color:#d63031; border-color:#fab1a0; background:#fff;">清空交友记忆</button>
+              <button class="sm-btn-outline" id="btn-clear-data" style="width:100%; color:#d63031; border-color:#fab1a0; background:#fff;">清空所有数据记忆</button>
             </div>
           </div>
 
@@ -525,34 +542,54 @@ window.RochePlugin.register({
           fakePersona: "",   
           worldbooks: [],
           selectedWbIds: [], 
+          localWorldbooks: [], // 本地专属世界书
+          selectedLocalWbIds: [], 
           selectedPrefs: [], 
           squarePosts: [],  
-          blacklist: [],     // 新增：屏蔽黑名单ID列表
+          blacklist: [],     
           chatQuoteData: null,
           isAiTyping: false
         };
 
-        const DEFAULT_PREFS = ["幽默风趣", "温柔体贴", "高冷傲娇", "反差萌", "事业狂", "艺术家", "病娇", "直球克星", "爹系/妈系", "话痨"];
+        const DEFAULT_PREFS = ["颜值控", "声控", "二次元", "幽默风趣", "温柔体贴", "高冷傲娇", "反差萌", "事业狂", "艺术家", "病娇", "直球克星", "爹系/妈系", "话痨", "纯爱战士", "海王/海后", "年下小狗", "成熟稳重"];
 
-        const getActivePersona = () => state.fakePersona ? state.fakePersona : state.myPersona;
+        // 获取融合后的提示词 (包含多世界书合并、及假身份遮掩逻辑)
+        async function getContextString() {
+            let wbContext = "";
+            if (state.selectedWbIds.length > 0) {
+              for (const wid of state.selectedWbIds) {
+                const entries = await roche.worldbook.getEntries({ categoryId: wid, scope: "global" });
+                wbContext += entries.map(e => e.content).join("\n") + "\n";
+              }
+            }
+            if (state.selectedLocalWbIds.length > 0) {
+                state.selectedLocalWbIds.forEach(id => {
+                    const lwb = state.localWorldbooks.find(w => w.id === id);
+                    if(lwb) wbContext += `[设定名称:${lwb.name}] 内容:${lwb.content}\n`;
+                });
+            }
+            
+            let p = `用户的真实身份底色是：${state.myPersona}\n`;
+            if (state.fakePersona) {
+                p += `但在当前交友软件上，用户的公开伪装人设是：${state.fakePersona}\n`;
+                p += `【重要法则】你扮演的角色(或NPC)只能看到和感知到用户的伪装人设，不知道真实底色。在生成对话或互动时，请只针对“伪装人设”作出反应。\n`;
+            }
+            return { personaStr: p, wbContext: wbContext.substring(0, 1500) };
+        }
 
         async function loadStorage() {
-          const liked = await roche.storage.get("soul_meet_liked");
-          if (liked) state.likedList = liked;
-          const chats = await roche.storage.get("soul_meet_chats");
-          if (chats) state.chatHistories = chats;
-          const chatSets = await roche.storage.get("soul_meet_chat_settings");
-          if (chatSets) state.chatSettings = chatSets;
-          const rps = await roche.storage.get("soul_meet_rp_histories");
-          if (rps) state.rpHistories = rps;
-          const posts = await roche.storage.get("soul_meet_square");
-          if (posts) state.squarePosts = posts;
-          const bl = await roche.storage.get("soul_meet_blacklist");
-          if (bl) state.blacklist = bl;
+          const liked = await roche.storage.get("soul_meet_liked"); if (liked) state.likedList = liked;
+          const chats = await roche.storage.get("soul_meet_chats"); if (chats) state.chatHistories = chats;
+          const chatSets = await roche.storage.get("soul_meet_chat_settings"); if (chatSets) state.chatSettings = chatSets;
+          const rps = await roche.storage.get("soul_meet_rp_histories"); if (rps) state.rpHistories = rps;
+          const posts = await roche.storage.get("soul_meet_square"); if (posts) state.squarePosts = posts;
+          const bl = await roche.storage.get("soul_meet_blacklist"); if (bl) state.blacklist = bl;
+          const localWbs = await roche.storage.get("soul_meet_local_wbs"); if (localWbs) state.localWorldbooks = localWbs;
           
           const settings = await roche.storage.get("soul_meet_settings");
           if (settings) {
             if (Array.isArray(settings.selectedWbIds)) state.selectedWbIds = settings.selectedWbIds;
+            if (Array.isArray(settings.selectedLocalWbIds)) state.selectedLocalWbIds = settings.selectedLocalWbIds;
             if (Array.isArray(settings.selectedPrefs)) state.selectedPrefs = settings.selectedPrefs;
             if (typeof settings.fakePersona === 'string') state.fakePersona = settings.fakePersona;
           } else {
@@ -567,18 +604,17 @@ window.RochePlugin.register({
           await roche.storage.set("soul_meet_rp_histories", state.rpHistories);
           await roche.storage.set("soul_meet_square", state.squarePosts);
           await roche.storage.set("soul_meet_blacklist", state.blacklist);
+          await roche.storage.set("soul_meet_local_wbs", state.localWorldbooks);
           await roche.storage.set("soul_meet_settings", { 
             selectedWbIds: state.selectedWbIds,
+            selectedLocalWbIds: state.selectedLocalWbIds,
             selectedPrefs: state.selectedPrefs,
             fakePersona: state.fakePersona
           });
         }
 
         async function askAIToJson(systemPrompt, userPrompt) {
-          const res = await roche.ai.chat({
-            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-            temperature: 0.9 
-          });
+          const res = await roche.ai.chat({ messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }], temperature: 0.9 });
           if (!res || !res.text) throw new Error("AI未返回内容");
           let str = res.text.trim();
           const match = str.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -589,7 +625,7 @@ window.RochePlugin.register({
         }
 
         // ==========================================
-        // 4. 加载上下文与生成卡片 
+        // 4. 加载上下文与生成卡片
         // ==========================================
         
         function renderPreferences() {
@@ -611,6 +647,27 @@ window.RochePlugin.register({
             prefListEl.appendChild(chip);
           });
         }
+        
+        function renderLocalWorldbooks() {
+            const listEl = document.getElementById('sm-local-wb-list');
+            listEl.innerHTML = '';
+            if (state.localWorldbooks.length === 0) {
+                listEl.innerHTML = '<span style="font-size:12px; color:#aaa;">暂无专属设定，请在下方添加</span>';
+                return;
+            }
+            state.localWorldbooks.forEach(wb => {
+                const chip = document.createElement('div'); chip.className = 'sm-chip';
+                if(state.selectedLocalWbIds.includes(wb.id)) chip.classList.add('selected');
+                chip.textContent = wb.name;
+                chip.onclick = () => {
+                    if(state.selectedLocalWbIds.includes(wb.id)) {
+                        state.selectedLocalWbIds = state.selectedLocalWbIds.filter(id => id !== wb.id); chip.classList.remove('selected');
+                    } else { state.selectedLocalWbIds.push(wb.id); chip.classList.add('selected'); }
+                    saveStorage();
+                };
+                listEl.appendChild(chip);
+            });
+        }
 
         async function loadRocheContext() {
           try {
@@ -619,18 +676,27 @@ window.RochePlugin.register({
             document.getElementById('sm-sys-persona').textContent = state.myPersona.substring(0, 40) + '...';
             document.getElementById('sm-fake-persona-input').value = state.fakePersona || '';
 
-            document.getElementById('btn-save-fake-persona').onclick = () => {
-               state.fakePersona = document.getElementById('sm-fake-persona-input').value.trim();
-               saveStorage();
-               roche.ui.toast("伪装身份已保存！");
-            };
-
             renderPreferences();
+            renderLocalWorldbooks();
+            
             document.getElementById('btn-add-pref').onclick = () => {
                const input = document.getElementById('sm-custom-pref-input'); const val = input.value.trim();
                if(val && !state.selectedPrefs.includes(val)) {
                  state.selectedPrefs.push(val); saveStorage(); renderPreferences(); input.value = ""; roche.ui.toast("已添加");
                }
+            };
+            
+            document.getElementById('btn-add-local-wb').onclick = () => {
+                const name = document.getElementById('sm-local-wb-name').value.trim();
+                const content = document.getElementById('sm-local-wb-content').value.trim();
+                if(name && content) {
+                    const newWb = { id: 'lwb_' + Date.now(), name, content };
+                    state.localWorldbooks.push(newWb);
+                    state.selectedLocalWbIds.push(newWb.id);
+                    saveStorage(); renderLocalWorldbooks();
+                    document.getElementById('sm-local-wb-name').value = ''; document.getElementById('sm-local-wb-content').value = '';
+                    roche.ui.toast("本地设定保存成功！");
+                } else { roche.ui.toast("名称和内容不能为空"); }
             };
 
             const wbs = await roche.worldbook.list();
@@ -638,7 +704,7 @@ window.RochePlugin.register({
             const wbListEl = document.getElementById('sm-wb-list'); wbListEl.innerHTML = '';
             
             if(state.worldbooks.length === 0) {
-              wbListEl.innerHTML = '<span style="color:#aaa; font-size:13px;">宿主暂无世界书，将在默认自由宇宙中匹配。</span>';
+              wbListEl.innerHTML = '<span style="color:#aaa; font-size:13px;">宿主暂无主系统世界书。</span>';
             } else {
               state.worldbooks.forEach(wb => {
                 const chip = document.createElement('div'); chip.className = 'sm-chip';
@@ -662,6 +728,7 @@ window.RochePlugin.register({
           container.innerHTML = `<div class="sm-empty-state"><div style="font-size:32px; margin-bottom:12px;">🔮</div><div style="color:#888; font-size:14px; margin-bottom: 20px;">跨维度信号连接中...</div></div>`;
           
           let newCards = []; state.passedDeck = []; 
+          const { personaStr, wbContext } = await getContextString();
 
           try {
             const chars = await roche.character.list();
@@ -677,32 +744,21 @@ window.RochePlugin.register({
           } catch(e) {}
 
           try {
-            let wbContext = "";
-            if (state.selectedWbIds.length > 0) {
-              for (const wid of state.selectedWbIds) {
-                const entries = await roche.worldbook.getEntries({ categoryId: wid, scope: "global" });
-                wbContext += entries.map(e => e.content).join("\n") + "\n";
-              }
-              wbContext = wbContext.substring(0, 1500); 
-            }
             const activePrefs = state.selectedPrefs.filter(p => !DEFAULT_PREFS.includes(p) || document.querySelector(`.sm-pref-chip.selected:contains('${p}')`));
-            let prefContext = activePrefs.length > 0 ? `请重点优先生成带有这些特质的人类：【${activePrefs.join("、")}】。` : "生成随机多元化、性格鲜明的人类。";
-
+            let prefContext = activePrefs.length > 0 ? `请优先生成带有这些特质的人类：【${activePrefs.join("、")}】。` : "生成随机多元化人类。";
             const modeInstruction = state.discoverMode === 'r18' 
-                ? `这是一个午夜寻求刺激、YP约会的地下社交软件，角色身份多样，但交友宣言(bio)必须极具性张力、直接大胆、充满暗示或野性。不要用清水的语气。`
-                : `前提是他们都在用这个社交软件，并以人类的语气说话，带点情绪或傲娇。`;
+                ? `这是午夜狂野模式，角色交友宣言必须极具张力、大胆、充满暗示。`
+                : `生成有趣的人类，带点情绪或傲娇。`;
 
-            const sysPrompt = `你是一个匿名交友匹配系统。请一次性生成 6 到 8 个截然不同、极具"活人感"的交友卡片。要求：
-1. 身份极端多样：可以有微服私访的皇帝、跨界魔法师、腹黑霸总等。
-2. 模式要求：${modeInstruction}
+            const sysPrompt = `你是一个交友匹配系统。一次性生成6到8个极具活人感的交友卡片。
+要求：
+1. 身份多样：总裁、打工人、跨界人等。
+2. 模式：${modeInstruction}
 3. ${prefContext}
-4. 严格输出 JSON 格式：{"cards":[{"id":"短id","name":"网名","bio":"交友宣言","tag":"四字特征","match":90,"persona":"设定"}]}`;
+4. 严格输出JSON：{"cards":[{"id":"短id","name":"网名","bio":"宣言","tag":"四字特征","match":90,"persona":"设定"}]}`;
             
             const res = await roche.ai.chat({
-              messages: [
-                { role: "system", content: sysPrompt },
-                { role: "user", content: `我的底色：\n${getActivePersona()}\n世界观潜规则：\n${wbContext}\n请生成 6 到 8 个鲜活的人类。` }
-              ],
+              messages: [{ role: "system", content: sysPrompt }, { role: "user", content: `我的情况：\n${personaStr}\n世界法则：\n${wbContext}\n请生成卡片。` }],
               temperature: 0.95 
             });
             let str = res.text.trim();
@@ -728,7 +784,7 @@ window.RochePlugin.register({
           const actions = document.getElementById('sm-card-actions');
           if (state.deckPool.length === 0) {
             actions.style.display = 'none';
-            let html = `<div class="sm-empty-state"><div style="font-size:32px; margin-bottom:12px;">🌟</div><div style="color:#888; font-size:14px; margin-bottom: 24px;">这一批卡片已经看完了</div>`;
+            let html = `<div class="sm-empty-state"><div style="font-size:32px; margin-bottom:12px;">🌟</div><div style="color:#888; font-size:14px; margin-bottom: 24px;">卡片看完了</div>`;
             if (state.passedDeck.length > 0) html += `<button class="sm-btn-outline" id="btn-rewind" style="margin-bottom:16px; width:100%;">🔙 重新查看错过的 Ta</button>`;
             html += `<button class="sm-btn-primary" id="btn-fetch-more" style="width:100%;">🚀 重新感应新批次</button></div>`;
             container.innerHTML = html;
@@ -842,11 +898,10 @@ window.RochePlugin.register({
         document.getElementById('modal-action-sheet').addEventListener('click', (e) => { if (e.target.id === 'modal-action-sheet') e.target.classList.remove('open'); });
 
         // ==========================================
-        // 7. 匿名广场核心引擎 (追加生成、评论、拉黑、单条删除)
+        // 7. 匿名广场核心引擎 (高级互动系统)
         // ==========================================
         async function generateSquarePosts(isAppend = false) {
             const feedEl = document.getElementById('sm-square-feed');
-            
             if (!isAppend) {
                 feedEl.innerHTML = `<div class="sm-empty-state" style="margin-top:50px;"><div style="font-size:32px; margin-bottom:12px;">🛸</div><div style="color:#888; font-size:14px;">正在搜寻附近的多维动态...</div></div>`;
             } else {
@@ -855,22 +910,22 @@ window.RochePlugin.register({
             }
             
             try {
+                const { personaStr, wbContext } = await getContextString();
                 const modeInstruction = state.discoverMode === 'r18' 
-                    ? `由于处于午夜狂野模式，请生成充满暗示、钓鱼、擦边或极具诱惑力的动态。`
-                    : `生成风格各异的日常分享：可以是深夜网抑云、搞笑吐槽、发美照帅照钓鱼、或者是奇怪的求助。`;
+                    ? `狂野模式：生成充满暗示、钓鱼、擦边的动态。`
+                    : `正常模式：生成日常分享、网抑云、搞怪求助等。`;
 
-                const sysPrompt = `你是一个交友软件的广场动态生成器。请生成 4 到 5 条"活人"发的广场动态。
+                const sysPrompt = `你是一个交友软件广场生成器。生成 4 到 5 条广场动态。
 要求：
 1. ${modeInstruction}
-2. 发帖人的身份可以是学生、霸总、魔法师等，要像真人在发朋友圈。
-3. "imageDesc" 字段如果有配图则写详细文字描述(如"一张腹肌照")，没有则留空。
-4. 为了真实感，每条动态必须预制 1 到 3 条路人NPC的热烈评论！
-5. 严格输出JSON格式：
-{"posts": [{"id":"post_短id", "author": {"id":"stranger_id", "name":"网名", "persona":"该用户的隐藏真实性格和身份设定", "avatar":""}, "content":"动态文案", "imageDesc":"图片描述或空", "likes":随机数字(50-500), "isLiked":false, "comments":[{"id":"c_短id", "author":"路人名字", "text":"评论内容", "isMe":false}]}]}
+2. "imageDesc" 如有配图则写描述(如"风景照")，没有则留空。
+3. 为了真实感，每条必须预制 1 到 3 条路人NPC评论！
+4. JSON格式：
+{"posts": [{"id":"post_短id", "author": {"id":"stranger_id", "name":"网名", "persona":"隐藏设定", "avatar":""}, "content":"文案", "imageDesc":"图片描述或空", "likes":随机(50-500), "isLiked":false, "comments":[{"id":"c_短id", "author":"路人名字", "text":"评论", "isMe":false, "likes":随机(0-50), "isLiked":false}]}]}
 只输出纯JSON。`;
 
                 const res = await roche.ai.chat({
-                  messages: [{ role: "system", content: sysPrompt }, { role: "user", content: `我的人设是：${getActivePersona()}，请生成广场动态。` }],
+                  messages: [{ role: "system", content: sysPrompt }, { role: "user", content: `我的情况：\n${personaStr}\n世界规则：\n${wbContext}` }],
                   temperature: 0.95 
                 });
                 
@@ -882,16 +937,11 @@ window.RochePlugin.register({
                 
                 const aiRes = JSON.parse(str);
                 if (aiRes && Array.isArray(aiRes.posts)) {
-                    if (isAppend) {
-                        state.squarePosts.push(...aiRes.posts);
-                    } else {
-                        state.squarePosts = aiRes.posts;
-                    }
+                    if (isAppend) state.squarePosts.push(...aiRes.posts);
+                    else state.squarePosts = aiRes.posts;
                     saveStorage();
                 }
-            } catch(e) {
-                roche.ui.toast("刷新广场失败，请重试。");
-            }
+            } catch(e) { roche.ui.toast("刷新广场失败"); }
             renderSquare();
         }
 
@@ -910,7 +960,6 @@ window.RochePlugin.register({
                return;
             }
 
-            // 渲染：过滤掉在黑名单中的作者帖子
             const visiblePosts = state.squarePosts.filter(p => !state.blacklist.includes(p.author.id));
 
             visiblePosts.forEach(post => {
@@ -919,7 +968,7 @@ window.RochePlugin.register({
                 
                 let imgHtml = '';
                 if(post.imageDesc) {
-                    imgHtml = `<div class="sm-post-img-wrap"><img src="https://i.postimg.cc/KYr2qRCK/1.jpg" style="width:100%; opacity:0.8;"><div class="sm-post-img-text">[照片: ${post.imageDesc}]</div></div>`;
+                    imgHtml = `<div class="sm-post-img-wrap"><div class="sm-post-img-text">[照片: ${post.imageDesc}]</div></div>`;
                 }
 
                 let commentsHtml = '';
@@ -927,8 +976,14 @@ window.RochePlugin.register({
                     commentsHtml = `<div class="sm-comments">` + 
                         post.comments.map(c => `
                           <div class="sm-comment-item">
-                            <span class="sm-comment-name">${c.author}:</span><span class="sm-comment-text">${c.text}</span>
-                            ${c.isMe ? `<span class="sm-comment-del" onclick="deleteComment('${post.id}', '${c.id}')">删除</span>` : ''}
+                            <div style="flex:1; word-wrap:break-word;">
+                                <span class="sm-comment-name">${c.author}:</span><span class="sm-comment-text">${c.text}</span>
+                            </div>
+                            <div style="display:flex; gap:8px; flex-shrink:0; align-items:center;">
+                                <span class="sm-comment-action btn-like-comment" data-cid="${c.id}">${c.isLiked?'❤️':'🤍'}${c.likes||''}</span>
+                                ${!c.isMe ? `<span class="sm-comment-action btn-reply-comment" data-cid="${c.id}" data-author="${c.author}">回复</span>` : ''}
+                                ${c.isMe ? `<span class="sm-comment-del" onclick="deleteComment('${post.id}', '${c.id}')">删除</span>` : ''}
+                            </div>
                           </div>
                         `).join('') + `</div>`;
                 }
@@ -948,97 +1003,122 @@ window.RochePlugin.register({
                     <button class="sm-post-act-btn btn-like-post ${post.isLiked ? 'liked' : ''}">
                       ${post.isLiked ? '❤️' : '🤍'} <span>${post.likes + (post.isLiked?1:0)}</span>
                     </button>
-                    <button class="sm-post-act-btn btn-comment-post">💬 评论</button>
+                    <button class="sm-post-act-btn btn-comment-post">💬 评论动态</button>
                   </div>
                   ${commentsHtml}
+                  ${post.comments?.length > 0 ? `<button class="sm-post-act-btn btn-refresh-comments" style="justify-content:center; width:100%; border:1px dashed #ddd; border-radius:12px; padding:6px; margin-top:8px;">🔄 刷新互动</button>` : ''}
                 `;
 
-                // 绑定点击头像私聊
                 postEl.querySelector('.click-to-chat').onclick = () => initiateChatFromSquare(post.author);
                 
-                // 绑定右上角菜单 (删除/屏蔽)
                 postEl.querySelector('.sm-post-more').onclick = () => {
                    showActionSheet([
-                       { label: '删除该动态', onClick: () => {
-                           state.squarePosts = state.squarePosts.filter(p => p.id !== post.id);
-                           saveStorage(); renderSquare();
-                       }},
-                       { label: '屏蔽此人', danger: true, onClick: () => {
-                           state.blacklist.push(post.author.id);
-                           saveStorage(); renderSquare();
-                           roche.ui.toast("已屏蔽该用户，不再显示其动态。");
-                       }}
+                       { label: '删除该动态', onClick: () => { state.squarePosts = state.squarePosts.filter(p => p.id !== post.id); saveStorage(); renderSquare(); }},
+                       { label: '屏蔽此人', danger: true, onClick: () => { state.blacklist.push(post.author.id); saveStorage(); renderSquare(); roche.ui.toast("已屏蔽该用户。"); }}
                    ]);
                 };
 
-                postEl.querySelector('.btn-like-post').onclick = () => {
-                    post.isLiked = !post.isLiked;
-                    saveStorage(); renderSquare();
-                };
+                postEl.querySelector('.btn-like-post').onclick = () => { post.isLiked = !post.isLiked; saveStorage(); renderSquare(); };
 
                 postEl.querySelector('.btn-comment-post').onclick = async () => {
                     const text = await showCustomPrompt(`评论 ${post.author.name} 的动态`, "想说点什么？");
                     if(text) {
                         if(!post.comments) post.comments = [];
-                        post.comments.push({ id: Date.now().toString(), author: '我', text: text, isMe: true });
-                        saveStorage(); renderSquare();
-                        triggerPostAuthorReply(post, text); 
+                        post.comments.push({ id: Date.now().toString(), author: '我', text: text, isMe: true, likes:0, isLiked:false });
+                        saveStorage(); renderSquare(); triggerPostReply(post, text, post.author.name); 
                     }
                 };
+                
+                // 绑定每条评论的点赞和回复
+                postEl.querySelectorAll('.btn-like-comment').forEach(btn => {
+                    btn.onclick = () => {
+                        const c = post.comments.find(x => x.id === btn.dataset.cid);
+                        if(c) { c.isLiked = !c.isLiked; c.likes = (c.likes || 0) + (c.isLiked ? 1 : -1); if(c.likes<0) c.likes=0; saveStorage(); renderSquare(); }
+                    }
+                });
+                postEl.querySelectorAll('.btn-reply-comment').forEach(btn => {
+                    btn.onclick = async () => {
+                        const targetAuthor = btn.dataset.author;
+                        const text = await showCustomPrompt(`回复 ${targetAuthor}`, "想说点什么？");
+                        if(text) {
+                            post.comments.push({ id: Date.now().toString(), author: '我', text: `回复 @${targetAuthor}: ${text}`, isMe: true, likes:0, isLiked:false });
+                            saveStorage(); renderSquare(); triggerPostReply(post, text, targetAuthor); 
+                        }
+                    }
+                });
+                
+                const rBtn = postEl.querySelector('.btn-refresh-comments');
+                if(rBtn) rBtn.onclick = () => refreshPostComments(post.id);
 
                 feedEl.appendChild(postEl);
             });
 
-            // 底部加载更多按钮
             const refreshBtn = document.createElement('div');
-            refreshBtn.className = 'sm-refresh-square';
-            refreshBtn.id = 'btn-load-more-sq';
-            refreshBtn.textContent = '加载更多动态 🚀';
-            refreshBtn.onclick = () => generateSquarePosts(true); // 传入 true 表示追加
+            refreshBtn.className = 'sm-refresh-square'; refreshBtn.id = 'btn-load-more-sq';
+            refreshBtn.textContent = '发现更多动态 🚀';
+            refreshBtn.onclick = () => generateSquarePosts(true); 
             feedEl.appendChild(refreshBtn);
         }
 
         window.deleteComment = function(postId, commentId) {
             const post = state.squarePosts.find(p => p.id === postId);
-            if(post) {
-                post.comments = post.comments.filter(c => c.id !== commentId);
-                saveStorage(); renderSquare();
-            }
+            if(post) { post.comments = post.comments.filter(c => c.id !== commentId); saveStorage(); renderSquare(); }
         };
 
         function initiateChatFromSquare(authorInfo) {
             let existingPeer = state.likedList.find(u => u.id === authorInfo.id);
             if(!existingPeer) {
-                existingPeer = {
-                    id: authorInfo.id, isChar: authorInfo.isChar, name: authorInfo.name,
-                    avatar: authorInfo.avatar, persona: authorInfo.persona, tag: "广场偶遇"
-                };
-                state.likedList.unshift(existingPeer);
-                saveStorage();
+                existingPeer = { id: authorInfo.id, isChar: authorInfo.isChar, name: authorInfo.name, avatar: authorInfo.avatar, persona: authorInfo.persona, tag: "广场偶遇" };
+                state.likedList.unshift(existingPeer); saveStorage();
             }
-            // 切换到消息视图并打开聊天窗
             document.querySelectorAll('.sm-nav-btn').forEach(b => b.classList.remove('active')); 
             document.querySelector('[data-target="view-inbox"]').classList.add('active');
             document.querySelectorAll('.sm-view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-inbox').classList.add('active');
-            
-            renderInbox();
-            openChat(existingPeer);
+            renderInbox(); openChat(existingPeer);
         }
 
-        async function triggerPostAuthorReply(post, myCommentText) {
+        async function triggerPostReply(post, myText, targetAuthor) {
             try {
-                const sysPrompt = `你现在是交友软件上的用户「${post.author.name}」。你的设定是：${post.author.persona}。
-你在广场上发了一条动态：“${post.content}” ${post.imageDesc ? '(附图:'+post.imageDesc+')' : ''}。
-现在，有人评论了你：“${myCommentText}”。
-请根据你的性格设定，简短回复这个人。如果他在撩你，你可以顺水推舟或拒绝。只需输出回复的纯文本即可。`;
-                
+                const { personaStr, wbContext } = await getContextString();
+                let sysPrompt = '';
+                if(targetAuthor === post.author.name) {
+                     sysPrompt = `你现在是交友软件上的用户「${post.author.name}」。你的设定：${post.author.persona}。
+你在广场发了动态：“${post.content}”。我的设定是：${personaStr}
+有人评论了你：“${myText}”。请根据性格设定，简短回复。如果被撩可顺水推舟。只输出纯文本。`;
+                } else {
+                     sysPrompt = `你现在是交友软件上的路人「${targetAuthor}」。我的设定是：${personaStr}
+你在动态“${post.content}”下参与了互动。有人回复了你：“${myText}”。
+请根据一个路人网友的身份，简短幽默地回复。只输出纯文本。`;
+                }
                 const res = await roche.ai.chat({ messages: [{ role: "system", content: sysPrompt }], temperature: 0.8 });
-                const reply = res.text.trim();
-                
-                post.comments.push({ id: Date.now().toString(), author: post.author.name, text: `回复 @我: ${reply}`, isMe: false });
+                post.comments.push({ id: Date.now().toString(), author: targetAuthor, text: `回复 @我: ${res.text.trim()}`, isMe: false, likes:0, isLiked:false });
                 saveStorage(); renderSquare();
-            } catch(e) { console.log("AI回复评论失败"); }
+            } catch(e) { console.log("AI回复失败"); }
+        }
+
+        async function refreshPostComments(postId) {
+            const post = state.squarePosts.find(p => p.id === postId); if(!post) return;
+            roche.ui.toast("正在呼唤网友评论...");
+            try {
+                const sysPrompt = `你是一个交友软件的NPC评论生成器。请根据以下帖子内容，生成 1 到 2 条路人NPC的新评论。
+发帖人：${post.author.name}
+帖子内容：${post.content} ${post.imageDesc ? '(附图:'+post.imageDesc+')' : ''}
+严格输出JSON格式：{"comments":[{"id":"c_短id", "author":"路人名字", "text":"评论内容", "isMe":false, "likes":随机(0-50), "isLiked":false}]}只输出纯JSON。`;
+                const res = await roche.ai.chat({ messages: [{ role: "system", content: sysPrompt }], temperature: 0.9 });
+                let str = res.text.trim();
+                const match = str.match(/```(?:json)?\s*([\s\S]*?)```/i);
+                if (match) str = match[1].trim();
+                const firstBrace = str.indexOf('{'); const lastBrace = str.lastIndexOf('}');
+                if (firstBrace !== -1 && lastBrace !== -1) str = str.slice(firstBrace, lastBrace + 1);
+                
+                const aiRes = JSON.parse(str);
+                if(aiRes && Array.isArray(aiRes.comments)) {
+                    if(!post.comments) post.comments = [];
+                    post.comments.push(...aiRes.comments);
+                    saveStorage(); renderSquare(); roche.ui.toast("新评论已到达");
+                }
+            } catch(e) { roche.ui.toast("刷新评论失败"); }
         }
 
         // ==========================================
@@ -1047,7 +1127,7 @@ window.RochePlugin.register({
         function renderInbox() {
           const list = document.getElementById('sm-inbox-list'); list.innerHTML = "";
           if (state.likedList.length === 0) {
-            list.innerHTML = '<div style="padding:60px 20px; text-align:center; color:#a0a0a0; font-size:14px; display:flex; flex-direction:column; align-items:center;"><div style="font-size:40px; margin-bottom:10px;">📮</div>这里还空空如也<br>快去发现页寻找缘分吧</div>'; return;
+            list.innerHTML = '<div style="padding:60px 20px; text-align:center; color:#a0a0a0; font-size:14px; display:flex; flex-direction:column; align-items:center;"><div style="font-size:40px; margin-bottom:10px;">📮</div>这里还空空如也<br>快去匹配寻找缘分吧</div>'; return;
           }
           state.likedList.forEach(u => {
             const item = document.createElement('div'); item.className = 'sm-list-item';
@@ -1136,7 +1216,7 @@ window.RochePlugin.register({
             } else if (msg.type === 'voice_message') {
                 isTransparent = true; contentHtml = `<div class="sm-voice-message">🎤 <span>语音: ${msg.content}</span></div>`;
             } else if (msg.type === 'user_photo' || msg.type === 'ai_image') {
-                isTransparent = true; contentHtml = `<div class="sm-ai-image-wrap"><img src="https://i.postimg.cc/KYr2qRCK/1.jpg" class="sm-ai-image" alt="照片"><div class="sm-ai-image-desc">[图片描述：${msg.content}]</div></div>`;
+                isTransparent = true; contentHtml = `<div class="sm-ai-image-wrap" style="background:#fcfcfc; border:1px dashed #ccc; padding:12px;"><div class="sm-ai-image-desc">[图片描述：${msg.content}]</div></div>`;
             }
 
             if (isTransparent) el.classList.add('is-transparent');
@@ -1188,9 +1268,10 @@ window.RochePlugin.register({
           renderChatHistory(); renderInbox();
 
           try {
+            const { personaStr, wbContext } = await getContextString();
             let sysPrompt = `你正在交友软件 "Soul Meet" 上以文字私信的方式与我聊天。
 你的身份是：「${currentPeer.name}」。你的设定：${currentPeer.persona}
-我的人设：${getActivePersona()}
+${personaStr}
 【最高规则：活人感多气泡输出】
 1. 你是一个有情绪的真实人类，不是客服。不要讲大道理。
 2. 你习惯把长句子拆成多个短句发送，像微信聊天一样连发几条消息，每句话作为一个独立的元素。
@@ -1302,7 +1383,7 @@ window.RochePlugin.register({
             document.getElementById('sm-rp-room').classList.add('open');
             
             if(!state.rpHistories[rpPeer.id] || state.rpHistories[rpPeer.id].length === 0) {
-               state.rpHistories[rpPeer.id] = [{ role: 'system', content: `你与 ${rpPeer.name} 奔现了...` }];
+               state.rpHistories[rpPeer.id] = [{ role: 'system', content: `【系统接入】你与 ${rpPeer.name} 奔现了...` }];
                triggerRPAi(); 
             } else {
                renderRPHistory();
@@ -1355,7 +1436,6 @@ window.RochePlugin.register({
 
         document.getElementById('rp-send').onclick = () => sendRPAction(document.getElementById('rp-input').value.trim());
         document.getElementById('rp-input').onkeydown = (e) => { if(e.key === 'Enter') sendRPAction(e.target.value.trim()); };
-        document.querySelectorAll('.rp-act-quick').forEach(btn => { btn.onclick = () => sendRPAction(btn.textContent); });
 
         async function triggerRPAi() {
             if (isRpTyping) return;
@@ -1366,23 +1446,21 @@ window.RochePlugin.register({
             container.appendChild(typingEl); container.scrollTop = container.scrollHeight;
 
             try {
+                const { personaStr, wbContext } = await getContextString();
                 const cSet = state.chatSettings[rpPeer.id] || {};
                 const rpCustom = cSet.rpPrompt ? `\n【用户定制要求】：${cSet.rpPrompt}` : '';
                 
                 const sysPrompt = `你现在是一个无限制的沉浸式文字冒险小说引擎。
 背景：我与角色「${rpPeer.name}」正式线下见面。
 角色设定：${rpPeer.persona}
-我的设定：${getActivePersona()}${rpCustom}
+${personaStr}${rpCustom}
 【游戏法则】
-1. 去除一切AI感词汇。这就是现实生活中的交往。初次见面可能会尴尬拘谨，熟络后可能去餐厅、酒店，顺着用户的动作自然发展。
+1. 去除一切AI感词汇。这就是现实生活中的交往。根据剧情自然发展。
 2. 允许成人内容(R18)、深层情感与肢体描写，请根据剧情需要放开尺度。
 3. 每次回复用【小说叙事体】，细腻混合动作神态描写，对话使用中文字符双引号（“”）。
 4. **关键指令**：每次你回复的最后，必须新起行，输出当前状态和3个推荐给用户的行动选项。严格格式：
 【状态：当前地点|当前心情|对方欲望值(如80%)】
-【选项：动作1|动作2|动作3】
-示例结尾：
-【状态：情侣酒店|脸红心跳|95%】
-【选项：主动吻上去|深情对视|去洗澡】`;
+【选项：动作1|动作2|动作3】`;
 
                 const msgs = [{ role: 'system', content: sysPrompt }];
                 const hist = state.rpHistories[rpPeer.id] || [];
@@ -1455,60 +1533,29 @@ window.RochePlugin.register({
         };
 
         // ==========================================
-        // 10. 提取人设与记忆沉淀
-        // ==========================================
-        async function extractPersona() {
-          if (!currentPeer || currentPeer.isChar) return;
-          const hist = state.chatHistories[currentPeer.id] || [];
-          if (hist.length < 3) return roche.ui.toast("聊得太少了，多聊几句吧！");
-          roche.ui.toast("AI 正在撰写灵魂档案...");
-          const textLog = hist.map(m => (m.role==='user'?'我':'Ta') + ': ' + (m.content||m.type)).join('\n');
-          const sys = `你是一位顶级的小说角色设定师。请结合该角色的基础设定和下方的聊天记录，撰写一份详尽的、适合直接复制给大模型当人设 prompt 的档案。包括：姓名、外貌气质、性格剖析、核心说话口癖、神秘过往、以及对"我"的特殊态度。
-【严重警告】：请直接输出格式化的人设档案纯文本！绝对不要说“好的”、“这是为您生成的档案”等任何前言后语和客套话！`;
-          let usr = `【基础设定】\n${currentPeer.persona}\n\n【实际表现】\n${textLog}`;
-          try {
-            const res = await roche.ai.chat({ messages: [{ role: "system", content: sys }, { role: "user", content: usr }], temperature: 0.7 });
-            document.getElementById('modal-persona-text').value = res.text.trim(); document.getElementById('modal-persona').classList.add('open');
-          } catch(e) { roche.ui.toast("提取灵魂档案失败"); }
-        }
-
-        const closePersonaModal = () => document.getElementById('modal-persona').classList.remove('open');
-        document.getElementById('btn-close-modal').addEventListener('click', closePersonaModal);
-        document.getElementById('modal-persona').addEventListener('click', (e) => { if (e.target.id === 'modal-persona') closePersonaModal(); });
-        
-        // 广场顶部清空按钮
-        document.getElementById('btn-clear-square').addEventListener('click', async () => {
-            const ok = await roche.ui.confirm({ title: "清空广场", message: "将删除当前广场所有的动态，是否确认？" });
-            if (ok) {
-                state.squarePosts = [];
-                saveStorage();
-                renderSquare();
-                roche.ui.toast("广场已清空");
-            }
-        });
-
-        // ==========================================
-        // 11. 初始化绑定
+        // 10. 初始化绑定
         // ==========================================
         function bindEvents() {
           document.getElementById('sm-close-plugin').addEventListener('click', () => roche.ui.closeApp());
           
-          // === 导航栏点击逻辑 ===
           document.querySelectorAll('.sm-nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
               document.querySelectorAll('.sm-nav-btn').forEach(b => b.classList.remove('active')); 
               btn.classList.add('active');
               
               const targetId = btn.getAttribute('data-target');
-              
               document.querySelectorAll('.sm-view').forEach(v => v.classList.remove('active')); 
               document.getElementById(targetId).classList.add('active');
               
               if (targetId === 'view-inbox') {
                   renderInbox(); 
               } else if (targetId === 'view-square') {
-                  // 移除自动生成，进入广场直接渲染现有状态，为空时会展示“探索广场”按钮
-                  renderSquare();
+                  if (state.squarePosts.length === 0) {
+                      // 初始化空状态，让用户自己点
+                      renderSquare();
+                  } else {
+                      renderSquare();
+                  }
               }
             });
           });
@@ -1602,6 +1649,13 @@ window.RochePlugin.register({
               const amount = parseFloat(document.getElementById('transfer-amount').value); const note = document.getElementById('transfer-note').value.trim();
               if (isNaN(amount) || amount <= 0) return roche.ui.toast("金额不能为空且须大于0");
               document.getElementById('modal-transfer').classList.remove('open'); sendSpecialMsg('transfer', { amount, note });
+          });
+
+          document.getElementById('btn-clear-square').addEventListener('click', async () => {
+              const ok = await roche.ui.confirm({ title: "清空广场", message: "将删除当前广场所有的动态，是否确认？" });
+              if (ok) {
+                  state.squarePosts = []; saveStorage(); renderSquare(); roche.ui.toast("广场已清空");
+              }
           });
 
           document.getElementById('btn-chat-persona').addEventListener('click', extractPersona);
